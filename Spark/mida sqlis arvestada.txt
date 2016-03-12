@@ -1,0 +1,12 @@
+Correlated subqueries are not supported in Hive.
+http://grokbase.com/t/hive/user/1289zqna6n/nested-select-statements
+there's no select into
+insert into only with select [] from
+sometimes that are created and stored as text file in the previous run show as empty https://issues.apache.org/jira/browse/HIVE-7368
+select from two tables should be done with join
+all tables should reside in their own folder, sometimes when multiple tables are the same select does not return anything
+
+
+
+insert into fit select id,acs.class, log(pprob) + sum(log(fprob)) score from test t join (select sp.attribute, sp.value, sp.class, sp.pprob, isnull(s.acprob,.001) fprob from (select attrclass.attribute, attrclass.value, priors.class, priors.pprob from attrclass join priors on (priors.class = attrclass.class) group by attrclass.attribute, attrclass.value, priors.class, priors.pprob) sp left join attrclass s on sp.attribute = s.attribute and sp.value = s.value and sp.class = s.class) acs on t.attribute = acs.attribute and t.value = acs.value group by id, acs.class, pprob
+

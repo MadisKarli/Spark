@@ -1,0 +1,4 @@
+99, age, presbyobic
+99, prescription, hypermetrope
+99, astigmatic, no
+99, tears, normal

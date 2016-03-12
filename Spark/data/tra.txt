@@ -1,0 +1,86 @@
+-1 1:0 2:3
+-1 1:0 2:4
+-1 1:0 2:5
+-1 1:0 2:6
+-1 1:0 2:7
+-1 1:0 2:8
++1 1:1 2:3 
++1 1:1 2:4
++1 1:1 2:5
++1 1:1 2:6 
++1 1:1 2:7
++--------------+--------------+-----+------+
+|     attribute|         value|class|acfreq|
++--------------+--------------+-----+------+
+|    presbyopic|    presbyopic| none|   6.0|
+|pre-presbyopic|pre-presbyopic| soft|   2.0|
+|pre-presbyopic|pre-presbyopic| hard|   1.0|
+|         young|         young| soft|   2.0|
+|         young|         young| hard|   2.0|
+|    presbyopic|    presbyopic| soft|   1.0|
+|    presbyopic|    presbyopic| hard|   1.0|
+|pre-presbyopic|pre-presbyopic| none|   5.0|
+|         young|         young| none|   4.0|
++--------------+--------------+-----+------+
+
++------------+------------+----+---+
+|         _c0|prescription|lens|_c3|
++------------+------------+----+---+
+|prescription|hypermetrope|soft|3.0|
+|prescription|hypermetrope|hard|1.0|
+|prescription|       myope|soft|2.0|
+|prescription|       myope|hard|3.0|
+|prescription|hypermetrope|none|8.0|
+|prescription|       myope|none|7.0|
++------------+------------+----+---+
+
++----------+----------+----+---+
+|       _c0|astigmatic|lens|_c3|
++----------+----------+----+---+
+|astigmatic|        no|none|7.0|
+|astigmatic|       yes|hard|4.0|
+|astigmatic|        no|soft|5.0|
+|astigmatic|       yes|none|8.0|
++----------+----------+----+---+
++-----+-------+----+----+
+|  _c0|  tears|lens| _c3|
++-----+-------+----+----+
+|tears| normal|none| 3.0|
+|tears| normal|soft| 5.0|
+|tears| normal|hard| 4.0|
+|tears|reduced|none|12.0|
++-----+-------+----+----+
+
++--------------+--------------+----------+----------+
+|     attribute|         value|     class|      freq|
++--------------+--------------+----------+----------+
+|    presbyopic|    presbyopic|      none|       0.4|
+|pre-presbyopic|pre-presbyopic|      none|0.33333334|
+|         young|         young|      none|0.26666668|
+|  prescription|  hypermetrope|      none|0.53333336|
+|  prescription|         myope|      none|0.46666667|
+|    astigmatic|            no|      none|0.46666667|
+|    astigmatic|           yes|      none|0.53333336|
+|         tears|        normal|      none|       0.2|
+|         tears|       reduced|      none|       0.8|
+|          hard|             4|0.16666667|      null|
+|pre-presbyopic|pre-presbyopic|      soft|       0.4|
+|         young|         young|      soft|       0.4|
+|    presbyopic|    presbyopic|      soft|       0.2|
+|  prescription|  hypermetrope|      soft|       0.6|
+|  prescription|         myope|      soft|       0.4|
+|    astigmatic|            no|      soft|       1.0|
+|         tears|        normal|      soft|       1.0|
+|          soft|             5|0.20833333|      null|
+|pre-presbyopic|pre-presbyopic|      hard|      0.25|
+|         young|         young|      hard|       0.5|
++--------------+--------------+----------+----------+
+only showing top 20 rows
++-----+-----+----------+
+|class|pfreq|     pprob|
++-----+-----+----------+
+| hard|    4|0.16666667|
+| soft|    5|0.20833333|
+| none|   15|     0.625|
++-----+-----+----------+
+
