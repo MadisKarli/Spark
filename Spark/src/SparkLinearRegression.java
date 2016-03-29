@@ -1,64 +1,83 @@
-//https://github.com/apache/spark/blob/master/examples/src/main/java/org/apache/spark/examples/mllib/JavaLogisticRegressionWithLBFGSExample.java
-//https://github.com/apache/spark/commit/7af0de076f74e975c9235c88b0f11b22fcbae060
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaSparkContext;
 
 // $example on$
 import scala.Tuple2;
 
+import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.mllib.classification.LogisticRegressionModel;
-import org.apache.spark.mllib.classification.LogisticRegressionWithLBFGS;
-import org.apache.spark.mllib.evaluation.MulticlassMetrics;
+import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
-import org.apache.spark.mllib.util.MLUtils;
+import org.apache.spark.mllib.regression.LinearRegressionModel;
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD;
+//https://github.com/apache/spark/blob/master/examples/src/main/java/org/apache/spark/examples/ml/JavaLinearRegressionWithElasticNetExample.java
 public class SparkLinearRegression {
+	public static void main(String[] args) {
+		final long startTime = System.currentTimeMillis();
+		SparkConf conf = new SparkConf().setAppName("Spark Linear regression");
+		JavaSparkContext sc = new JavaSparkContext(conf);
+		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+		loggers.add(LogManager.getRootLogger());
+		for ( Logger logger : loggers ) {
+			logger.setLevel(Level.ERROR);
+		}
+		// Load and parse the data
+		String path = "data/linearregression.txt";
+		JavaRDD<String> data = sc.textFile(path);
+		JavaRDD<LabeledPoint> parsedData = data.map(
+				new Function<String, LabeledPoint>() {
+					public LabeledPoint call(String line) {
+						String[] parts = line.split(",");
+						double[] v = new double[1];
+						v[0] = Double.parseDouble(parts[1]);
+						return new LabeledPoint(Double.parseDouble(parts[0]), Vectors.dense(v));
+					}
+				}
+				);
+		parsedData.cache();
 
-// $example off$
+		// Building the model
+		int numIterations = 500;
+		double stepSize = 0.01;
+		//http://stackoverflow.com/questions/26259743/spark-mllib-linear-regression-model-intercept-is-always-0-0
+		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
+		alg.setIntercept(true);
+		alg.optimizer().setNumIterations(numIterations).setStepSize(stepSize);
+		final LinearRegressionModel model = alg.run(JavaRDD.toRDD(parsedData));
+		
+		System.out.println(model.intercept() + " " + model.weights());
+		// Evaluate model on training examples and compute training error
+		JavaRDD<Tuple2<Double, Double>> valuesAndPreds = parsedData.map(
+				new Function<LabeledPoint, Tuple2<Double, Double>>() {
+					public Tuple2<Double, Double> call(LabeledPoint point) {
+						double prediction = model.predict(point.features());
+						System.out.println("prediction: " + prediction + " actual " + point.label() + " features " + point.features() + " point " + point);
+						return new Tuple2<>(prediction, point.label());
+					}
+				}
+				);
+		double MSE = new JavaDoubleRDD(valuesAndPreds.map(
+				new Function<Tuple2<Double, Double>, Object>() {
+					public Object call(Tuple2<Double, Double> pair) {
+						return Math.pow(pair._1() - pair._2(), 2.0);
+					}
+				}
+				).rdd()).first();
+		System.out.println("training Mean Squared Error = " + MSE);
 
-/**
- * Example for LogisticRegressionWithLBFGS.
- */
-  public static void main(String[] args) {
-    SparkConf conf = new SparkConf().setAppName("JavaLogisticRegressionWithLBFGSExample");
-    SparkContext sc = new SparkContext(conf);
-    // $example on$
-    String path = "bayes.txt";
-    JavaRDD<LabeledPoint> data = MLUtils.loadLibSVMFile(sc, path).toJavaRDD();
-
-    // Split initial RDD into two... [60% training data, 40% testing data].
-    JavaRDD<LabeledPoint>[] splits = data.randomSplit(new double[] {0.6, 0.4}, 11L);
-    JavaRDD<LabeledPoint> training = splits[0].cache();
-    JavaRDD<LabeledPoint> test = splits[1];
-
-    // Run training algorithm to build the model.
-    final LogisticRegressionModel model = new LogisticRegressionWithLBFGS()
-      .setNumClasses(10)
-      .run(training.rdd());
-
-    // Compute raw scores on the test set.
-    JavaRDD<Tuple2<Object, Object>> predictionAndLabels = test.map(
-      new Function<LabeledPoint, Tuple2<Object, Object>>() {
-        public Tuple2<Object, Object> call(LabeledPoint p) {
-          Double prediction = model.predict(p.features());
-          return new Tuple2<Object, Object>(prediction, p.label());
-        }
-      }
-    );
-
-    // Get evaluation metrics.
-    MulticlassMetrics metrics = new MulticlassMetrics(predictionAndLabels.rdd());
-    double precision = metrics.precision();
-    System.out.println("Precision = " + precision);
-
-    // Save and load model
-    //model.save(sc, "target/tmp/javaLogisticRegressionWithLBFGSModel");
-    //LogisticRegressionModel sameModel = LogisticRegressionModel.load(sc,
-      //"target/tmp/javaLogisticRegressionWithLBFGSModel");
-    // $example off$
-
-    sc.stop();
-  }
+		// Save and load model
+//			    model.save(sc.sc(), "target/tmp/javaLinearRegressionWithSGDModel");
+//			    LinearRegressionModel sameModel = LinearRegressionModel.load(sc.sc(),
+//			      "target/tmp/javaLinearRegressionWithSGDModel");
+		final long endTime = System.currentTimeMillis();
+		System.out.println("Execution time: " + (endTime - startTime) );
+		sc.stop();
+	}
 }

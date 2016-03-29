@@ -19,7 +19,6 @@ import org.apache.spark.SparkContext;
 public class SparkBayes {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
-		System.out.println("Bayessitt");
 		SparkConf sparkConf = new SparkConf().setAppName("JavaNaiveBayesExample");
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		SparkContext sc = jsc.sc();

@@ -1,0 +1,20 @@
+SQL
++-------------------+-----------------+
+|                 b1|               b2|
++-------------------+-----------------+
+|-1.2752161383285303|82.05331412103746|
++-------------------+-----------------+
+
++------------------+
+|                R2|
++------------------+
+|0.9758463315354489|
++------------------+
+
+SPARK
+0.0 [-1.2812911581818549E72]
+training Mean Squared Error = 9.234602055196868E147
+
+LinearRegressionWithSGD model = new LinearRegressionWithSGD();
+		model.setIntercept(true);
+		model.train(JavaRDD.toRDD(parsedData), numIterations, stepSize);

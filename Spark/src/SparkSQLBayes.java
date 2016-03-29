@@ -21,7 +21,7 @@ public class SparkSQLBayes {
 	//http://nuncupatively.blogspot.com.ee/2011/07/naive-bayes-in-sql.html
 	public static void main(String[] args){
 		final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("SparkNaive Bayes in SQL");
+		SparkConf conf = new SparkConf().setAppName("Naive Bayes in Spark SQL");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
 		loggers.add(LogManager.getRootLogger());
