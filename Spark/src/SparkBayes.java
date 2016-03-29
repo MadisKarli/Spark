@@ -18,15 +18,15 @@ import org.apache.spark.SparkContext;
 
 public class SparkBayes {
 	public static void main(String[] args) {
+		final long startTime = System.currentTimeMillis();
 		System.out.println("Bayessitt");
 		SparkConf sparkConf = new SparkConf().setAppName("JavaNaiveBayesExample");
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		SparkContext sc = jsc.sc();
-		// $example on$
 		//c) If you skip one in between, it should be assigned a default value of zero.
 		//In short, +1 1:0.7 2:1 3:1 translates to:
 		//Assign to class +1, the point (0.7,1,1).
-		String path = "data/a2.txt";
+		String path = "data/bayes spark2.txt";
 		JavaRDD<LabeledPoint> inputData = MLUtils.loadLibSVMFile(jsc.sc(), path).toJavaRDD();
 		JavaRDD<LabeledPoint>[] tmp = inputData.randomSplit(new double[]{0.6, 0.4}, 12345);
 		JavaRDD<LabeledPoint> training = tmp[0]; // training set
@@ -46,8 +46,10 @@ public class SparkBayes {
 		  }
 		}).count() / (double) test.count();
 		System.out.println(accuracy);
+		
 		// Save and load model
-		//model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
-		// $example off$
+//		model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
+		final long endTime = System.currentTimeMillis();
+		System.out.println("Total execution time: " + (endTime - startTime) );
 	}
 }

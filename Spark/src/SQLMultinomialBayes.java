@@ -71,16 +71,16 @@ public class SQLMultinomialBayes {
 		
 		DataFrame a,b,c,d,e;
 		a = hc.sql("drop table priors");
-		a = hc.sql("create table priors (class string, pfreq Int, pprob float) stored as textfile location '/home/madis/workspace/Spark/tables/bayes'");
-		a = hc.sql("insert into priors select lens, count(1), sum(1.0) / total from RAW "
+		a = hc.sql("create table priors stored as textfile location'/home/madis/workspace/Spark/tables/bayes' as"
+				+ " select lens class, count(1) pfreq, sum(1.0) / total pprob from RAW "
 				+ "join (select count(1) total from RAW) V on (1 = 1) " //http://grokbase.com/t/hive/user/1289zqna6n/nested-select-statements
 				+ "group by lens, total"); // Correlated subqueries are not supported in Hive.
 		a = hc.sql("select * from priors");
 		a.show();
 		b = hc.sql("drop table attrclass");
-		b = hc.sql("create table attrclass (attribute string, value string, class string, acprob float) stored as textfile location '/home/madis/workspace/Spark/tables/bayes'");
-		b = hc.sql("insert into attrclass select attribute, value, p.class, acfreq/pfreq acprob from "
-				+ "(select age attribute, age value, lens class, sum(1.0) acfreq from RAW group by age, lens "
+		b = hc.sql("create table attrclass stored as textfile location '/home/madis/workspace/Spark/tables/bayes' as "
+				+ " select attribute, value, p.class, acfreq/pfreq acprob from "
+				+ "(select 'age ' attribute, age value, lens class, sum(1.0) acfreq from RAW group by age, lens "
 				+ "union all "
 				+ "select 'prescription', prescription, lens, sum(1.0) from RAW group by prescription, lens "
 				+ "union all "
@@ -90,30 +90,30 @@ public class SQLMultinomialBayes {
 				+ "join priors p on rd.class = p.class"); //sometimes this query returns empty table. just delete metastore_db and run again
 		b = hc.sql("select * from attrclass");
 		b.show();
-//		c = hc.sql("drop table test");
-//		c = hc.sql("create table test (id int, attribute string, value string) stored as textfile location '/home/madis/workspace/Spark/tables/bayes'");
-//		c = hc.sql("insert into test select '1', 'age','presbyopic'");
-//		c = hc.sql("insert into test select '2, 'prescription','hypermetrope'");
-//		c = hc.sql("insert into test select '3', 'astigmatic','no'");
-//		c = hc.sql("insert into test select '4', 'tears','normal'");
-//		c = hc.sql("select * from test");
-//		c.show();
 		
 //		e = hc.sql("select * from test");
 //		e.show();
-		d = hc.sql("drop table fit");
-		d = hc.sql("create table fit (id string, class string, score float) stored as textfile location '/home/madis/workspace/Spark/tables/bayes' ");
+//		d = hc.sql("drop table fit");
+//		d = hc.sql("create table fit (id string, class string, score float) stored as textfile location '/home/madis/workspace/Spark/tables/bayes' ");
 		
 //		d = hc.sql("select s.attribute, s.value, p.class p.pprob from attrclass s join priors p on p.class = s.class group by s.attribute, s.value, p.class, p.pprob");
-		System.out.println("asi");
-		d = hc.sql("select id, acs.class, log(pprob) + sum(log(fprob)) score from test t join "
-				+ "(select sp.attribute, sp.value, sp.class, sp.pprob, COALESCE(acprob,2.0) fprob from "
-				+ "(select attrclass.attribute, attrclass.value, priors.class, priors.pprob from attrclass "
-				+ "join priors on (priors.class = attrclass.class) group by attrclass.attribute, attrclass.value, priors.class, priors.pprob) sp "
-				+ "left join attrclass s on sp.attribute = s.attribute and sp.value = s.value and sp.class = s.class) acs "
-				+ "on t.attribute = acs.attribute and t.value = acs.value group by id, acs.class, pprob");
-		d.show();
-		System.out.println("asja lõpp");
+//		System.out.println("asi");
+//		d = hc.sql("select id, acs.class, log(pprob) + sum(log(fprob)) score from test t join "
+//				+ "(select sp.attribute, sp.value, sp.class, sp.pprob, COALESCE(acprob,2.0) fprob from "
+//				+ "(select attrclass.attribute, attrclass.value, priors.class, priors.pprob from attrclass "
+//				+ "join priors on (priors.class = attrclass.class) group by attrclass.attribute, attrclass.value, priors.class, priors.pprob) sp "
+//				+ "left join attrclass s on sp.attribute = s.attribute and sp.value = s.value and sp.class = s.class) acs "
+//				+ "on t.attribute = acs.attribute and t.value = acs.value group by id, acs.class, pprob");
+//		d = hc.sql("create table fit stored as textfile location '/home/madis/workspace/Spark/tables/bayes' as "
+//				+ "select id, acs.class, log(pprob) + sum(log(fprob)) score from test t join "
+//				+ "(select sp.attribute, sp.value, sp.class, sp.pprob, acprob fprob from "
+//				+ "(select attrclass.attribute, attrclass.value, priors.class, priors.pprob from attrclass "
+//				+ "join priors on (priors.class = attrclass.class) group by attrclass.attribute, attrclass.value, priors.class, priors.pprob) sp "
+//				+ "left join attrclass s on sp.attribute = s.attribute and sp.value = s.value and sp.class = s.class) acs "
+//				+ "on t.attribute = acs.attribute and t.value = acs.value"
+//				+ " group by id, acs.class, pprob");
+//		d.show();
+//		System.out.println("asja lõpp");
 //		d = hc.sql("select * from fit");
 //		d.show();
 //		multinomial naive bayes
