@@ -1,0 +1,46 @@
+a = hc.sql("create table km_data (id int, cluster_id int, lat double, lng double) stored as textfile location '/home/madis/workspace/Spark/tables/kmeans/km_clusters' ");
+		a = hc.sql("insert into km_data select * from raw");
+		a = hc.sql("create table km_clusters (id int, lat double, lng double) stored as textfile location '/home/madis/workspace/Spark/tables/kmeans/km_clusters'");
+		a = hc.sql("insert into km_clusters select id, lat, lng from km_data LIMIT 2");
+		
+		a = hc.sql("select * from raw");
+		a.show();
+		System.out.println("kmdata");
+		a = hc.sql("select * from km_data");
+		a.show();
+		System.out.println("kmclusters");
+		a = hc.sql("select * from km_clusters");
+		a.show();
+OUTPUT:
++---+----------+----+----+
+| id|cluster_id| lat| lng|
++---+----------+----+----+
+|  1|      null| 1.2| 3.4|
+|  2|      null| 2.1| 3.2|
+|  3|      null| 5.2| 7.8|
+|  4|      null| 1.0| 2.0|
++---+----------+----+----+
+
+kmdata
++---+----------+---+----+
+| id|cluster_id|lat| lng|
++---+----------+---+----+
+|  1|         1|3.4|null|
+|  2|         2|3.2|null|
+|  1|      null|1.2| 3.4|
+|  2|      null|2.1| 3.2|
+|  3|      null|5.2| 7.8|
+|  4|      null|1.0| 2.0|
++---+----------+---+----+
+
+kmclusters
++---+----+---+
+| id| lat|lng|
++---+----+---+
+|  1| 1.2|3.4|
+|  2| 2.1|3.2|
+|  1|null|1.2|
+|  2|null|2.1|
+|  3|null|5.2|
+|  4|null|1.0|
++---+----+---+
