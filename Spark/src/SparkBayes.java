@@ -12,6 +12,13 @@ import org.apache.spark.mllib.classification.NaiveBayes;
 import org.apache.spark.mllib.classification.NaiveBayesModel;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.util.MLUtils;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 // $example off$
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
@@ -22,6 +29,11 @@ public class SparkBayes {
 		SparkConf sparkConf = new SparkConf().setAppName("JavaNaiveBayesExample");
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		SparkContext sc = jsc.sc();
+		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+		loggers.add(LogManager.getRootLogger());
+		for ( Logger logger : loggers ) {
+			logger.setLevel(Level.ERROR);
+		}
 		//c) If you skip one in between, it should be assigned a default value of zero.
 		//In short, +1 1:0.7 2:1 3:1 translates to:
 		//Assign to class +1, the point (0.7,1,1).
@@ -35,6 +47,7 @@ public class SparkBayes {
 		  test.mapToPair(new PairFunction<LabeledPoint, Double, Double>() {
 		    @Override
 		    public Tuple2<Double, Double> call(LabeledPoint p) {
+		    	System.out.println(p.features()+ " actual " + p.label() + " prediction " + model.predict(p.features()));
 		      return new Tuple2<Double, Double>(model.predict(p.features()), p.label());
 		    }
 		  });
@@ -45,7 +58,10 @@ public class SparkBayes {
 		  }
 		}).count() / (double) test.count();
 		System.out.println(accuracy);
-		
+		System.out.println();
+		for(double el : model.pi()){
+			System.out.println(el);
+		}
 		// Save and load model
 //		model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
 		final long endTime = System.currentTimeMillis();

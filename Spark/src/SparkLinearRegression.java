@@ -17,7 +17,10 @@ import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.regression.LinearRegressionModel;
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD;
+
+import antlr.collections.impl.Vector;
 //https://github.com/apache/spark/blob/master/examples/src/main/java/org/apache/spark/examples/ml/JavaLinearRegressionWithElasticNetExample.java
+//optimization http://spark.apache.org/docs/latest/mllib-optimization.html
 public class SparkLinearRegression {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -44,15 +47,18 @@ public class SparkLinearRegression {
 		parsedData.cache();
 
 		// Building the model
-		int numIterations = 500;
-		double stepSize = 0.01;
+		int numIterations = 1;
+		double stepSize = 0.0011;
 		//http://stackoverflow.com/questions/26259743/spark-mllib-linear-regression-model-intercept-is-always-0-0
 		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
 		alg.setIntercept(true);
-		alg.optimizer().setNumIterations(numIterations).setStepSize(stepSize);
+		alg.optimizer()
+		.setNumIterations(numIterations)
+		.setStepSize(stepSize);
 		final LinearRegressionModel model = alg.run(JavaRDD.toRDD(parsedData));
 		
-		System.out.println(model.intercept() + " " + model.weights());
+		System.out.println(model.intercept() + " intercept, weights " + model.weights());
+		
 		// Evaluate model on training examples and compute training error
 		JavaRDD<Tuple2<Double, Double>> valuesAndPreds = parsedData.map(
 				new Function<LabeledPoint, Tuple2<Double, Double>>() {

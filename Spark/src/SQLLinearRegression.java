@@ -19,7 +19,6 @@ import org.apache.spark.sql.types.StructType;
 
 public class SQLLinearRegression {
 		public static void main(String[] args){
-		    System.out.println("Linear Regression");
 			final long startTime = System.currentTimeMillis();
 			SparkConf conf = new SparkConf().setAppName("Linear Regression in Spark SQL");
 			JavaSparkContext sc = new JavaSparkContext(conf);
@@ -29,6 +28,7 @@ public class SQLLinearRegression {
 			    logger.setLevel(Level.ERROR);
 			}
 			HiveContext hc = new HiveContext(sc.sc());
+			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
 			JavaRDD<String> points = sc.textFile("data/linearregression.txt"); 
 			String schemaString = "x y"; //change here
@@ -68,7 +68,7 @@ public class SQLLinearRegression {
 			DataFrame a;
 			a = hc.sql("drop table linearvalues");
 			a = hc.sql("drop table output");
-			a = hc.sql("create table linearvalues stored as textfile location '/home/madis/workspace/Spark/tables/linearregression/linearvalues' as "
+			a = hc.sql("create table linearvalues as "
 					+ "select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) b1, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) b2 from data");
 			a = hc.sql("select * from linearvalues");
 			a.show();
@@ -76,11 +76,11 @@ public class SQLLinearRegression {
 			a = hc.sql("select (b2 * sum(y) + b1 * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by b1,b2");
 			a.show();
 			
-//			a = hc.sql("create table output stored as textfile location '/home/madis/workspace/Spark/tables/linearregression/output' as "
+//			a = hc.sql("create table output as "
 //					+ "select x, b2+x*b1 prediction from test join linearvalues");
 //			a = hc.sql("select * from output");
 //			a.show();
-//			
+			
 			final long endTime = System.currentTimeMillis();
 			System.out.println("Execution time: " + (endTime - startTime) );
 			sc.close();

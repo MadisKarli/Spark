@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS  lr_data (x int, y double)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ", "
+LINES TERMINATED BY "\n"
+STORED AS TEXTFILE;
+
+LOAD DATA INPATH '/user/labuser/KoppelBachelor/linearregression.txt' INTO TABLE lr_data 
+
+create table lr_linearvalues stored as textfile as select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) b1, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) b2 from lr_data
+
+select * from linearvalues 
+
+select (b2 * sum(y) + b1 * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from lr_data, lr_linearvalues group by b1,b2
