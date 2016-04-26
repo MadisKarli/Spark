@@ -17,6 +17,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+//http://archive.ics.uci.edu/ml/datasets/Online+Video+Characteristics+and+Transcoding+Time+Dataset
 public class SQLLinearRegression {
 		public static void main(String[] args){
 			final long startTime = System.currentTimeMillis();
@@ -30,7 +31,7 @@ public class SQLLinearRegression {
 			HiveContext hc = new HiveContext(sc.sc());
 			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
-			JavaRDD<String> points = sc.textFile("data/linearregression.txt"); 
+			JavaRDD<String> points = sc.textFile("input/youtube_videos.tsv"); 
 			String schemaString = "x y"; //change here
 			List<StructField> fields = new ArrayList<StructField>();
 			for(String fieldName : schemaString.split(" ")){
@@ -40,14 +41,14 @@ public class SQLLinearRegression {
 			JavaRDD<Row> rowRDD = points.map(
 					new Function<String, Row>(){
 						public Row call(String record) throws Exception {
-							String[] fields = record.split(",");
-							return RowFactory.create(fields[0], fields[1].trim()); //change here
+							String[] fields = record.split("\t");
+							return RowFactory.create(fields[4], fields[5].trim()); //change here
 						}
 					});
 			DataFrame data = hc.createDataFrame(rowRDD, schema);
 			data.registerTempTable("data");
 			
-			points = sc.textFile("data/linearregressiontest.txt"); 
+/*			points = sc.textFile("data/linearregressiontest.txt"); 
 			schemaString = "x"; //change here
 			fields = new ArrayList<StructField>();
 			for(String fieldName : schemaString.split(" ")){
@@ -61,13 +62,15 @@ public class SQLLinearRegression {
 						}
 					});
 			DataFrame test = hc.createDataFrame(rowRDD, schema);
-			test.registerTempTable("test");
+			test.registerTempTable("test");*/
 			
 			//https://ayadshammout.com/2013/11/30/t-sql-linear-regression-function/
 			//b1 is intercept
 			DataFrame a;
 			a = hc.sql("drop table linearvalues");
 			a = hc.sql("drop table output");
+//			a = hc.sql("select * from data");
+//			a.show();
 			a = hc.sql("create table linearvalues as "
 					+ "select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) b1, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) b2 from data");
 			a = hc.sql("select * from linearvalues");

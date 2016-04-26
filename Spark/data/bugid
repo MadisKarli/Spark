@@ -1,3 +1,8 @@
+notes
+
+much easier to create something different in sql - spark mllib does not have a standard
+Sql does not require that much configuration(memory etc)
+
 a = hc.sql("create table km_data (id int, cluster_id int, lat double, lng double) stored as textfile location '/home/madis/workspace/Spark/tables/kmeans/km_clusters' ");
 		a = hc.sql("insert into km_data select * from raw");
 		a = hc.sql("create table km_clusters (id int, lat double, lng double) stored as textfile location '/home/madis/workspace/Spark/tables/kmeans/km_clusters'");
@@ -44,3 +49,4 @@ kmclusters
 |  3|null|5.2|
 |  4|null|1.0|
 +---+----+---+
+

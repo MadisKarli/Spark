@@ -21,6 +21,8 @@ import org.apache.spark.mllib.regression.LinearRegressionWithSGD;
 import antlr.collections.impl.Vector;
 //https://github.com/apache/spark/blob/master/examples/src/main/java/org/apache/spark/examples/ml/JavaLinearRegressionWithElasticNetExample.java
 //optimization http://spark.apache.org/docs/latest/mllib-optimization.html
+
+//üks võimalus - http://archive.ics.uci.edu/ml/datasets/Online+Video+Characteristics+and+Transcoding+Time+Dataset
 public class SparkLinearRegression {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -32,23 +34,24 @@ public class SparkLinearRegression {
 			logger.setLevel(Level.ERROR);
 		}
 		// Load and parse the data
-		String path = "data/linearregression.txt";
+		String path = "input/youtube_videos_small.tsv";
 		JavaRDD<String> data = sc.textFile(path);
 		JavaRDD<LabeledPoint> parsedData = data.map(
 				new Function<String, LabeledPoint>() {
 					public LabeledPoint call(String line) {
-						String[] parts = line.split(",");
+						String[] parts = line.split("\t");
 						double[] v = new double[1];
-						v[0] = Double.parseDouble(parts[1]);
-						return new LabeledPoint(Double.parseDouble(parts[0]), Vectors.dense(v));
+						v[0] = Double.parseDouble(parts[4]);
+						return new LabeledPoint(Double.parseDouble(parts[5]), Vectors.dense(v));
 					}
 				}
 				);
 		parsedData.cache();
+		System.out.println(parsedData.count());
 
 		// Building the model
-		int numIterations = 1;
-		double stepSize = 0.0011;
+		int numIterations = 11;
+		double stepSize = 0.001;
 		//http://stackoverflow.com/questions/26259743/spark-mllib-linear-regression-model-intercept-is-always-0-0
 		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
 		alg.setIntercept(true);
