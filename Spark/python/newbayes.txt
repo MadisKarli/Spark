@@ -1,0 +1,7 @@
+1,1,ax,2
+1,1,gqj,6
+1,1,fd,1
+2,2,tyf,4
+2,2,tyf,3
+3,NULL,tyf,4
+3,NULL,fty,1
