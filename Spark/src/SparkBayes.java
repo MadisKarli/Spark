@@ -37,7 +37,7 @@ public class SparkBayes {
 		//c) If you skip one in between, it should be assigned a default value of zero.
 		//In short, +1 1:0.7 2:1 3:1 translates to:
 		//Assign to class +1, the point (0.7,1,1).
-		String path = "data/bayes spark2.txt";
+		String path = "data/bayes spark3.txt";
 		JavaRDD<LabeledPoint> inputData = MLUtils.loadLibSVMFile(jsc.sc(), path).toJavaRDD();
 		JavaRDD<LabeledPoint>[] tmp = inputData.randomSplit(new double[]{0.6, 0.4}, 12345);
 		JavaRDD<LabeledPoint> training = tmp[0]; // training set

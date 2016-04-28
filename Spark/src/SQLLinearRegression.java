@@ -9,6 +9,9 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.ml.param.ParamMap;
+import org.apache.spark.ml.regression.LinearRegression;
+import org.apache.spark.mllib.regression.LinearRegressionModel;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -48,6 +51,7 @@ public class SQLLinearRegression {
 			DataFrame data = hc.createDataFrame(rowRDD, schema);
 			data.registerTempTable("data");
 			
+
 /*			points = sc.textFile("data/linearregressiontest.txt"); 
 			schemaString = "x"; //change here
 			fields = new ArrayList<StructField>();

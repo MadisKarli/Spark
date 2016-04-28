@@ -23,7 +23,7 @@ public class SQLCorrelation {
 			//HiveContext hc = new HiveContext(sc.sc());
 			SQLContext hc = new SQLContext(sc);
 			
-			JavaRDD<String> points = sc.textFile("data/correlationData.csv"); 
+			JavaRDD<String> points = sc.textFile("python/generated YT 1 million.tsv"); 
 			String schemaString = "x y"; //change here
 			List<StructField> fields = new ArrayList<StructField>();
 			for(String fieldName : schemaString.split(" ")){
@@ -33,8 +33,8 @@ public class SQLCorrelation {
 			JavaRDD<Row> rowRDD = points.map(
 					new Function<String, Row>(){
 						public Row call(String record) throws Exception {
-							String[] fields = record.split(",");
-							return RowFactory.create(fields[0], fields[1].trim()); //change here
+							String[] fields = record.split("\t");
+							return RowFactory.create(fields[4], fields[5]); //change here
 						}
 					});
 			DataFrame data = hc.createDataFrame(rowRDD, schema);

@@ -1,7 +1,7 @@
 from random import uniform
-with open("correlationData.csv", "w") as file:
+with open("correlation data 300 million.csv", "w") as file:
 	text = ""
-	for j in range(50):
+	for j in range(300):
 		text = ""
 		for i in range(1000000):
 			first = uniform(0.0, 999.9)

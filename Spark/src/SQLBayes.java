@@ -31,7 +31,8 @@ public class SQLBayes {
 		HiveContext hc = new HiveContext(sc.sc());
 		hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 		
-		JavaRDD<String> points = sc.textFile("input/converted.csv"); 
+		//JavaRDD<String> points = sc.textFile("input/converted.csv"); 
+		JavaRDD<String> points = sc.textFile("data/naiveBayesData.txt"); 
 		String schemaString = "uid feature class"; //change here
 		List<StructField> fields = new ArrayList<StructField>();
 		for(String fieldName : schemaString.split(" ")){
