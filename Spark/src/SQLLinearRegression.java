@@ -34,7 +34,7 @@ public class SQLLinearRegression {
 			HiveContext hc = new HiveContext(sc.sc());
 			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
-			JavaRDD<String> points = sc.textFile("input/youtube_videos.tsv"); 
+			JavaRDD<String> points = sc.textFile("python/generated YT 1 million.tsv"); 
 			String schemaString = "x y"; //change here
 			List<StructField> fields = new ArrayList<StructField>();
 			for(String fieldName : schemaString.split(" ")){

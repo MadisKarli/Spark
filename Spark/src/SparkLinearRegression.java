@@ -32,7 +32,7 @@ public class SparkLinearRegression {
 			logger.setLevel(Level.ERROR);
 		}
 		// Load and parse the data
-		String path = "input/youtube_videos_small.tsv";
+		String path = "python/generated YT 1 million.tsv";
 		JavaRDD<String> data = sc.textFile(path);
 		JavaRDD<LabeledPoint> parsedData = data.map(new Function<String, LabeledPoint>() {
 			public LabeledPoint call(String line) {
