@@ -32,7 +32,7 @@ public class SparkLinearRegression {
 			logger.setLevel(Level.ERROR);
 		}
 		// Load and parse the data
-		String path = "python/generated YT 1 million.tsv";
+		String path = "input/youtube_videos.tsv";
 		JavaRDD<String> data = sc.textFile(path);
 		JavaRDD<LabeledPoint> parsedData = data.map(new Function<String, LabeledPoint>() {
 			public LabeledPoint call(String line) {
@@ -66,15 +66,6 @@ public class SparkLinearRegression {
 		alg.optimizer().setNumIterations(numIterations).setStepSize(stepSize);
 		final LinearRegressionModel model = alg.run(JavaRDD.toRDD(parsedData), Vectors.dense(initialW));
 
-		JavaRDD<Tuple2<Double, Double>> valuesAndPreds1 = parsedData
-				.map(new Function<LabeledPoint, Tuple2<Double, Double>>() {
-					public Tuple2<Double, Double> call(LabeledPoint point) {
-						double prediction = model.predict(point.features());
-						System.out.println("pede" + prediction);
-						return new Tuple2<>(prediction, point.label());
-					}
-				});
-
 		// Evaluate model on training examples and compute training error
 		JavaRDD<Tuple2<Double, Double>> valuesAndPreds = parsedData
 				.map(new Function<LabeledPoint, Tuple2<Double, Double>>() {
@@ -87,7 +78,6 @@ public class SparkLinearRegression {
 				});
 		double MSE = new JavaDoubleRDD(valuesAndPreds.map(new Function<Tuple2<Double, Double>, Object>() {
 			public Object call(Tuple2<Double, Double> pair) {
-				System.out.println("pairs " + pair._1() + " " + pair._2());
 				return Math.pow(pair._1() - pair._2(), 2.0);
 			}
 		}).rdd()).first();
