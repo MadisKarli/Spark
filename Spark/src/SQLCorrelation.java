@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.StructType;
 
 public class SQLCorrelation {
 		public static void main(String[] args){
-//			final long startTime = System.currentTimeMillis();
+			final long startTime = System.currentTimeMillis();
 			SparkConf conf = new SparkConf().setAppName("Correlation in Spark SQL");
 			JavaSparkContext sc = new JavaSparkContext(conf);
 			
@@ -45,8 +45,8 @@ public class SQLCorrelation {
 			DataFrame a = hc.sql("select corr(x,y) Correlation from Data");
 			a.show();
 			
-//			final long endTime = System.currentTimeMillis();
-//			System.out.println("Execution time: " + (endTime - startTime) );
+			final long endTime = System.currentTimeMillis();
+			System.out.println("Execution time: " + (endTime - startTime) );
 			sc.close();
 			/*
 			 * 1 mil

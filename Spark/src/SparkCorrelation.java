@@ -10,7 +10,7 @@ import scala.Tuple2;
 
 public class SparkCorrelation {
 	public static void main(String[] args) {
-		// final long startTime = System.currentTimeMillis();
+		 final long startTime = System.currentTimeMillis();
 		SparkConf conf = new SparkConf().setAppName("Spark Correlation");
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 
@@ -19,9 +19,7 @@ public class SparkCorrelation {
 		 * There are two ways to map the data 
 		 * First: map both X and Y separately but Spark does not optimize this enough 
 		 * even though they should be  able to work together 
-		 * Second: map to one PairRDD and take keys as X, values as Y - this causes another issue 
-		 * because correlation needs JavaDoubleRDD but javapairrdd.keys() returns javaRDD 
-		 * therefore we must use collect which in turn slows the application down a bit.
+		 * Second: map to one PairRDD and take keys as X, values as Y 
 		 */
 
 		// JavaDoubleRDD X1 = data.mapToDouble(new DoubleFunction<String>(){
@@ -63,15 +61,14 @@ public class SparkCorrelation {
 				return new Tuple2<Double, Double>(x, y);
 			}
 		});
-
-		JavaDoubleRDD Xs = jsc.parallelizeDoubles(XY.keys().collect());
-		JavaDoubleRDD Ys = jsc.parallelizeDoubles(XY.values().collect());
+		JavaRDD<Double> X = XY.keys();
+		JavaRDD<Double> Y = XY.values();
 		//pearson method is default, other is spearman method
-		Double correlation = Statistics.corr(Xs.srdd(), Ys.srdd());
+		Double correlation = Statistics.corr(X, Y);
 
 		jsc.close();
-		// final long endTime = System.currentTimeMillis();
-		// System.out.println("Execution time: " + (endTime - startTime) );
+		 final long endTime = System.currentTimeMillis();
+		 System.out.println("Execution time: " + (endTime - startTime) );
 		System.out.println("Correlation is: " + correlation);
 	}
 }
