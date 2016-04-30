@@ -29,11 +29,6 @@ public class SparkBayes {
 		SparkConf sparkConf = new SparkConf().setAppName("JavaNaiveBayesExample");
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		SparkContext sc = jsc.sc();
-		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-		loggers.add(LogManager.getRootLogger());
-		for ( Logger logger : loggers ) {
-			logger.setLevel(Level.ERROR);
-		}
 		//c) If you skip one in between, it should be assigned a default value of zero.
 		//In short, +1 1:0.7 2:1 3:1 translates to:
 		//Assign to class +1, the point (0.7,1,1).
@@ -45,14 +40,24 @@ public class SparkBayes {
 		final NaiveBayesModel model = NaiveBayes.train(training.rdd(), 1.0);
 		JavaPairRDD<Double, Double> predictionAndLabel =
 		  test.mapToPair(new PairFunction<LabeledPoint, Double, Double>() {
-		    @Override
+		    /**
+			 * 
+			 */
+			private static final long serialVersionUID = 5970068786622801541L;
+
+			@Override
 		    public Tuple2<Double, Double> call(LabeledPoint p) {
 		    	System.out.println(p.features()+ " actual " + p.label() + " prediction " + model.predict(p.features()));
 		      return new Tuple2<Double, Double>(model.predict(p.features()), p.label());
 		    }
 		  });
 		double accuracy = predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
-		  @Override
+		  /**
+			 * 
+			 */
+			private static final long serialVersionUID = -7042070591367537117L;
+
+		@Override
 		  public Boolean call(Tuple2<Double, Double> pl) {
 		    return pl._1().equals(pl._2());
 		  }

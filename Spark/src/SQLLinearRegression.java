@@ -1,17 +1,10 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.ml.param.ParamMap;
-import org.apache.spark.ml.regression.LinearRegression;
-import org.apache.spark.mllib.regression.LinearRegressionModel;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -26,11 +19,6 @@ public class SQLLinearRegression {
 			final long startTime = System.currentTimeMillis();
 			SparkConf conf = new SparkConf().setAppName("Linear Regression in Spark SQL");
 			JavaSparkContext sc = new JavaSparkContext(conf);
-			List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-			loggers.add(LogManager.getRootLogger());
-			for ( Logger logger : loggers ) {
-			    logger.setLevel(Level.ERROR);
-			}
 			HiveContext hc = new HiveContext(sc.sc());
 			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
@@ -43,6 +31,11 @@ public class SQLLinearRegression {
 			StructType schema = DataTypes.createStructType(fields);
 			JavaRDD<Row> rowRDD = points.map(
 					new Function<String, Row>(){
+						/**
+						 * 
+						 */
+						private static final long serialVersionUID = -5410204604525205517L;
+
 						public Row call(String record) throws Exception {
 							String[] fields = record.split("\t");
 							return RowFactory.create(fields[4], fields[5].trim()); //change here
@@ -51,22 +44,6 @@ public class SQLLinearRegression {
 			DataFrame data = hc.createDataFrame(rowRDD, schema);
 			data.registerTempTable("data");
 			
-
-/*			points = sc.textFile("data/linearregressiontest.txt"); 
-			schemaString = "x"; //change here
-			fields = new ArrayList<StructField>();
-			for(String fieldName : schemaString.split(" ")){
-				fields.add(DataTypes.createStructField(fieldName, DataTypes.StringType, true));
-			}
-			schema = DataTypes.createStructType(fields);
-			rowRDD = points.map(
-					new Function<String, Row>(){
-						public Row call(String record) throws Exception {
-							return RowFactory.create(record.trim()); //change here
-						}
-					});
-			DataFrame test = hc.createDataFrame(rowRDD, schema);
-			test.registerTempTable("test");*/
 			
 			//https://ayadshammout.com/2013/11/30/t-sql-linear-regression-function/
 			//b1 is intercept
@@ -83,10 +60,11 @@ public class SQLLinearRegression {
 			a = hc.sql("select (b2 * sum(y) + b1 * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by b1,b2");
 			a.show();
 			
-//			a = hc.sql("create table output as "
-//					+ "select x, b2+x*b1 prediction from test join linearvalues");
-//			a = hc.sql("select * from output");
-//			a.show();
+			
+			a = hc.sql("create table output as "
+					+ "select d.x, l.b2+d.x*l.b1 prediction, d.y actual from data d join linearvalues l");
+			a = hc.sql("select * from output");
+			a.show();
 			
 			final long endTime = System.currentTimeMillis();
 			System.out.println("Execution time: " + (endTime - startTime) );
