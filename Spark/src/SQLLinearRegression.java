@@ -18,12 +18,13 @@ public class SQLLinearRegression {
 		public static void main(String[] args){
 			final long startTime = System.currentTimeMillis();
 			SparkConf conf = new SparkConf().setAppName("Linear Regression in Spark SQL");
-			JavaSparkContext sc = new JavaSparkContext(conf);
-			HiveContext hc = new HiveContext(sc.sc());
+			conf.set("eventLog.enabled", "false");
+			JavaSparkContext jsc = new JavaSparkContext(conf);
+			HiveContext hc = new HiveContext(jsc.sc());
 			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
-			JavaRDD<String> points = sc.textFile("input/youtube_videos.tsv"); 
-			String schemaString = "x y"; //change here
+			JavaRDD<String> points = jsc.textFile(args[0]); 
+			String schemaString = "x y";
 			List<StructField> fields = new ArrayList<StructField>();
 			for(String fieldName : schemaString.split(" ")){
 				fields.add(DataTypes.createStructField(fieldName, DataTypes.StringType, true));
@@ -31,14 +32,11 @@ public class SQLLinearRegression {
 			StructType schema = DataTypes.createStructType(fields);
 			JavaRDD<Row> rowRDD = points.map(
 					new Function<String, Row>(){
-						/**
-						 * 
-						 */
 						private static final long serialVersionUID = -5410204604525205517L;
 
 						public Row call(String record) throws Exception {
 							String[] fields = record.split("\t");
-							return RowFactory.create(fields[4], fields[5].trim()); //change here
+							return RowFactory.create(fields[4], fields[5]); 
 						}
 					});
 			DataFrame data = hc.createDataFrame(rowRDD, schema);
@@ -46,29 +44,43 @@ public class SQLLinearRegression {
 			
 			
 			//https://ayadshammout.com/2013/11/30/t-sql-linear-regression-function/
-			//b1 is intercept
+			/*
+			 * SparkSQL (as of 1.6) does not support storing values in variables. This can be overcome by storing values in minitables, storing variables is also possible when using shell.
+			 * Following uses 4*count(*), 2*sum(x) and sum(y). Let's hope Optimization gods are smart enough to see this.
+			 */
+			/*
+			 * 160 000 - Execution time: 18863
+			 * i - 0.5158112426930667, s - 79.01994446493904
+			 * 1mil Execution time: 22186
+			 * 0.5294229840839438|90.2586273422204
+			 * 3mil Execution time: 33415
+			 * |0.529181703766521|90.39266677511154|
+			 * 5mil Execution time: 42135
+			 * |0.5291844146668602|90.33024924257904|
+			 * 10mil Execution time: 65569
+			 * |0.5292429389608567|90.29940083047|
+			 */
 			DataFrame a;
-			a = hc.sql("drop table linearvalues");
-			a = hc.sql("drop table output");
-//			a = hc.sql("select * from data");
-//			a.show();
+//			a = hc.sql("drop table linearvalues");
+//			a = hc.sql("drop table output");
 			a = hc.sql("create table linearvalues as "
-					+ "select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) b1, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) b2 from data");
+					+ "select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) intercept, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) slope from data");
 			a = hc.sql("select * from linearvalues");
 			a.show();
 			
-			a = hc.sql("select (b2 * sum(y) + b1 * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by b1,b2");
-			a.show();
+			//test predictions
+//			a = hc.sql("create table output as "
+//					+ "select d.x, l.slope+d.x*l.intercept prediction, d.y actual from data d join linearvalues l");
+//			a = hc.sql("select * from output");
+//			a.show();
 			
-			
-			a = hc.sql("create table output as "
-					+ "select d.x, l.b2+d.x*l.b1 prediction, d.y actual from data d join linearvalues l");
-			a = hc.sql("select * from output");
-			a.show();
+			//this calculates R2
+//			a = hc.sql("select (slope * sum(y) + intercept * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by intercept,slope");
+
 			
 			final long endTime = System.currentTimeMillis();
 			System.out.println("Execution time: " + (endTime - startTime) );
-			sc.close();
+			jsc.close();
 	}
 }
 

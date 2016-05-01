@@ -9,18 +9,16 @@ import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.hive.HiveContext;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-public class SQLCorrelation {
+public class SQLCorrelationSQLContext {
 		public static void main(String[] args){
 			final long startTime = System.currentTimeMillis();
 			SparkConf conf = new SparkConf().setAppName("Correlation in Spark SQL");
 			JavaSparkContext sc = new JavaSparkContext(conf);
 			
-			//HiveContext hc = new HiveContext(sc.sc());
 			SQLContext hc = new SQLContext(sc);
 
 			JavaRDD<String> points = sc.textFile(args[0]); 
@@ -49,13 +47,18 @@ public class SQLCorrelation {
 			System.out.println("Execution time: " + (endTime - startTime) );
 			sc.close();
 			/*
+			 * 160 000
+			 * 0.9202032394442804
+			 * sql Execution time: 6799
 			 * 1 mil
 			 * sql	Execution time: 8668
 			 * hc	Execution time: 16190
-			 * 5mil
+			 * 5 mil
 			 * sql	Execution time: 22111
 			 * hc	Execution time: 29213
-			 * 
+			 * 10 mil - 0.8352207245283236
+			 * sql 	Execution time: 47694
+			 * hc 	Execution time: 73743
 			 */
 	}
 }

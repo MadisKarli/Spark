@@ -2,3 +2,14 @@
 99, prescription, hypermetrope
 99, astigmatic, no
 99, tears, normal
+
+
+a = hc.sql("create table linearvalues as "
+					+ "select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) b1, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) b2 from data");
+
+Execution time: 22204
+			
+prediction: 1182.3367140563494 actual 1080.0 features [3.84] point (2.16,[3.84])
+prediction: 788.2244760375663 actual 720.0 features [2.56] point (1.44,[2.56])
+prediction: 525.8935176063137 actual 480.0 features [1.708] point (0.96,[1.708])
+prediction: 108.38086545516536 actual 144.0 features [0.352] point (0.288,[0.352])
