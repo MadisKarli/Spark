@@ -35,15 +35,9 @@ public class SparkBayes {
 
 			public LabeledPoint call(String line) {
 				String[] parts = line.split(",");
-				double[] v = new double[8];
+				double[] v = new double[2];
 				v[0] = Double.parseDouble(parts[1]);
-				v[1] = Double.parseDouble(parts[2]);
-				v[2] = Double.parseDouble(parts[3]);
-				v[3] = Double.parseDouble(parts[4]);
-				v[4] = Double.parseDouble(parts[6]);
-				v[5] = Double.parseDouble(parts[7]);
-				v[6] = Double.parseDouble(parts[8]);
-				v[7] = Double.parseDouble(parts[9]);
+				v[1] = Double.parseDouble(parts[54]);
 				return new LabeledPoint(Double.parseDouble(parts[55]), Vectors.dense(v));
 				
 			}
