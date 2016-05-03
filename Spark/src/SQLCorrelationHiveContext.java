@@ -16,12 +16,12 @@ import org.apache.spark.sql.types.StructType;
 public class SQLCorrelationHiveContext {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("Correlation in Spark SQL");
+		SparkConf conf = new SparkConf().setAppName("Correlation in SparkaSQL using HiveContext");
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 
 		HiveContext hc = new HiveContext(jsc.sc());
 
-		JavaRDD<String> points = jsc.textFile(args[0]);
+		JavaRDD<String> points = jsc.textFile(args[0],8);
 		String schemaString = "x y";
 		List<StructField> fields = new ArrayList<StructField>();
 		for (String fieldName : schemaString.split(" ")) {
@@ -42,6 +42,7 @@ public class SQLCorrelationHiveContext {
 		a.show();
 
 		final long endTime = System.currentTimeMillis();
+		a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +"SQL correlation hivecontext out"));
 		System.out.println("Execution time: " + (endTime - startTime));
 		jsc.close();
 

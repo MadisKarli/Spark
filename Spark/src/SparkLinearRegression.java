@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -15,11 +18,11 @@ import scala.Tuple2;
 public class SparkLinearRegression {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("Spark Linear regression");
+		SparkConf conf = new SparkConf().setAppName("Spark Linear Regression");
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 		
 		// Load and parse the data
-		JavaRDD<String> data = jsc.textFile(args[0]);
+		JavaRDD<String> data = jsc.textFile(args[0],8);
 		JavaRDD<LabeledPoint> parsedData = data.map(new Function<String, LabeledPoint>() {
 			private static final long serialVersionUID = 7004546027616594543L;
 
@@ -33,7 +36,9 @@ public class SparkLinearRegression {
 		parsedData.cache();
 		
 		// Building the model
-		int numIterations = 600;
+		int numIterations = 100;
+		//75	0.19074499877604897 intercept, weights [0.49250253763280133]	Execution time: 10121
+		//50	0.21459948278977786 intercept, weights [0.4755016122466446]
 		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
 		alg.setIntercept(true);
 		alg.optimizer().setNumIterations(numIterations);
@@ -59,11 +64,23 @@ public class SparkLinearRegression {
 				return Math.pow(pair._1() - pair._2(), 2.0);
 			}
 		}).rdd()).mean();
+		
 		System.out.println(model.intercept() + " intercept, weights " + model.weights());
 		System.out.println("training Mean Squared Error = " + MSE);
 		System.out.println("count " + parsedData.count());
-
+		
+		
 		final long endTime = System.currentTimeMillis();
+		List<Double> answer = new ArrayList<Double>();
+		answer.add((double) (endTime-startTime));
+		answer.add(model.intercept());
+		answer.add(model.weights().toArray()[0]);
+		answer.add(MSE);
+		answer.add((double) parsedData.count());
+		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
+		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"spark linear regression out");
+
+		
 		System.out.println("Execution time: " + (endTime - startTime));
 		jsc.stop();
 		jsc.close();

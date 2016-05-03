@@ -52,9 +52,6 @@ public class SparkBayes {
 		    }
 		  });
 		double accuracy = predictionAndLabel.filter(new Function<Tuple2<Double, Double>, Boolean>() {
-		  /**
-			 * 
-			 */
 			private static final long serialVersionUID = -7042070591367537117L;
 
 		@Override

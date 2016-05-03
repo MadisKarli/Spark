@@ -1,4 +1,8 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -37,9 +41,15 @@ public class SparkCorrelation {
 		JavaRDD<Double> Y = XY.values();
 		//pearson method is default, other is spearman method
 		Double correlation = Statistics.corr(X, Y);
-
-		jsc.close();
+		
+		
 		final long endTime = System.currentTimeMillis();
+		List<Double> answer = new ArrayList<Double>();
+		answer.add((double) (endTime-startTime));
+		answer.add(correlation);
+		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
+		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"Spark Correlation Out");
+		jsc.close();
 		System.out.println("Execution time: " + (endTime - startTime) );
 		System.out.println("Correlation is: " + correlation);
 	}
