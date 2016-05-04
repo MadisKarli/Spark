@@ -79,7 +79,7 @@ public class SparkBayes {
 		List<Double> answer = new ArrayList<Double>();
 		for (double el : model.pi()) {
 			answer.add(el);
-			System.out.println(el);
+//			System.out.println(el);
 		}
 		// Save and load model
 		// model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
@@ -88,5 +88,6 @@ public class SparkBayes {
 		out.saveAsTextFile(args[0] + String.valueOf(endTime) +"Spark Bayes Out " +String.valueOf(inputData.count()));
 		System.out.println("Total execution time: " + (endTime - startTime));
 		jsc.close();
+		//acc on original data - 90/10 - 54%, 80/20 -60%
 	}
 }

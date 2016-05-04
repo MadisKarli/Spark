@@ -45,7 +45,10 @@ public class SQLBayes {
 		
 
 		DataFrame a,b;
-		//class is not null does not work for some reason, it was working but now it is not :( current workaround is to use A <> B
+//		a = hc.sql("drop table agg");
+//		a = hc.sql("drop table coefficients");
+//		a = hc.sql("drop table scores");
+//		a = hc.sql("drop table output");
 		a = hc.sql("create table agg as "
 				+ "select feature, sum(1)+0.5 value, class from data group by feature, class");
 //		a = hc.sql("select * from agg");
@@ -68,8 +71,13 @@ public class SQLBayes {
 		
 		b = hc.sql("select a.uid, actual, prediction, score from scores a "
 				+ "inner join (select c.uid, max(score) maxscore from scores c group by c.uid) b on a.uid = b.uid and a.score = maxscore");
-//		b.show(100);
-		
+		b.show(100);
+//		DataFrame c = hc.sql("create table output as "
+//				+ "select a.uid, actual, prediction, score from scores a "
+//				+ "inner join (select c.uid, max(score) maxscore from scores c group by c.uid) b on a.uid = b.uid and a.score = maxscore");
+//		c = hc.sql("select count(*) from output where actual = prediction");
+//		c.show();
+		//acc on original data - 306059 / 581012 - 52%
 		final long endTime = System.currentTimeMillis();
 		System.out.println("Execution time: " + (endTime - startTime) );
 		b.rdd().saveAsTextFile(args[0]+String.valueOf(endTime) +"SQL bayes out " + String.valueOf(rowRDD.count()));
