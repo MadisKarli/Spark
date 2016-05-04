@@ -78,7 +78,7 @@ public class SparkLinearRegression {
 		answer.add(MSE);
 		answer.add((double) parsedData.count());
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
-		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"spark linear regression out");
+		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"spark linear regression out " + String.valueOf(parsedData.count()));
 
 		
 		System.out.println("Execution time: " + (endTime - startTime));

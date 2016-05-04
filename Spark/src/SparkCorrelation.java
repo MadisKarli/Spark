@@ -48,7 +48,7 @@ public class SparkCorrelation {
 		answer.add((double) (endTime-startTime));
 		answer.add(correlation);
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
-		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"Spark Correlation Out");
+		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"Spark Correlation Out " + String.valueOf(XY.count()));
 		jsc.close();
 		System.out.println("Execution time: " + (endTime - startTime) );
 		System.out.println("Correlation is: " + correlation);

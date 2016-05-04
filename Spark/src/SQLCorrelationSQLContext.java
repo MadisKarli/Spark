@@ -44,7 +44,7 @@ public class SQLCorrelationSQLContext {
 			a.show();
 			
 			final long endTime = System.currentTimeMillis();
-			a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +"SQL correlation sqlcontext out"));
+			a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +"SQL correlation sqlcontext out ") + String.valueOf(rowRDD.count()));
 			System.out.println("Execution time: " + (endTime - startTime) );
 			sc.close();
 			/*

@@ -79,7 +79,7 @@ public class SQLLinearRegressionHiveContext {
 
 			
 			final long endTime = System.currentTimeMillis();
-			a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +"SQL linearregression hivecontext out"));
+			a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +"SQL linearregression hivecontext out ")+String.valueOf(rowRDD.count()));
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
 	}

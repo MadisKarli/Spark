@@ -45,7 +45,7 @@ public class SQLLinearRegressionSQLContext {
 			DataFrame a = hc.sql("select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) intercept, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) slope from data");
 			a.show();
 			final long endTime = System.currentTimeMillis();
-			a.rdd().saveAsTextFile((args[0]+ String.valueOf(endTime) + "SQL linearregression sqlcontext out"));
+			a.rdd().saveAsTextFile((args[0]+ String.valueOf(endTime) + "SQL linearregression sqlcontext out ")+String.valueOf(rowRDD.count()));
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
 	}

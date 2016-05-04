@@ -44,11 +44,7 @@ public class SQLBayes {
 		pdf.registerTempTable("data");
 		
 
-		DataFrame a, b;
-		a = hc.sql("drop table agg");
-		a = hc.sql("drop table coefficients");
-		a = hc.sql("drop table scores");
-		
+		DataFrame a,b;
 		//class is not null does not work for some reason, it was working but now it is not :( current workaround is to use A <> B
 		a = hc.sql("create table agg as "
 				+ "select feature, sum(1)+0.5 value, class from data group by feature, class");
@@ -76,7 +72,7 @@ public class SQLBayes {
 		
 		final long endTime = System.currentTimeMillis();
 		System.out.println("Execution time: " + (endTime - startTime) );
-		b.rdd().saveAsTextFile(args[0]+String.valueOf(endTime) +"SQL bayes out" + String.valueOf(rowRDD.count()));
+		b.rdd().saveAsTextFile(args[0]+String.valueOf(endTime) +"SQL bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();
 	}
 }
