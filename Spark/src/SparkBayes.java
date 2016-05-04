@@ -37,7 +37,7 @@ public class SparkBayes {
 				String[] parts = line.split(",");
 				double[] v = new double[2];
 				v[0] = Double.parseDouble(parts[1]);
-				v[1] = Double.parseDouble(parts[54]);
+				v[1] = Double.parseDouble(parts[2]);
 				return new LabeledPoint(Double.parseDouble(parts[55]), Vectors.dense(v));
 				
 			}
@@ -45,7 +45,7 @@ public class SparkBayes {
 		inputData.cache();
 		//String path = "data/bayes spark3.txt";
 //		JavaRDD<LabeledPoint> inputData = MLUtils.loadLibSVMFile(jsc.sc(), path).toJavaRDD();
-		JavaRDD<LabeledPoint>[] tmp = inputData.randomSplit(new double[] { 0.8, 0.2 }, 12345);
+		JavaRDD<LabeledPoint>[] tmp = inputData.randomSplit(new double[] { 0.8, 0.2 });
 		JavaRDD<LabeledPoint> training = tmp[0]; // training set
 		JavaRDD<LabeledPoint> test = tmp[1]; // test set
 		final NaiveBayesModel model = NaiveBayes.train(training.rdd(), 1.0);
