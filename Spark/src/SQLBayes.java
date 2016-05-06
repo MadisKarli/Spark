@@ -77,12 +77,13 @@ public class SQLBayes {
 		 * val1/class_count is P(val1|class) val1 - number of times feature1 is present in class
 		 * val2/class_count is P(val2|class) val2 - number of times feature2 is present in class
 		 */
-		
 		a = hc.sql("create table coefficients  as "
 				+ "select *, log(class_count/total)+log(val1/class_count)+log(val2/class_count) probability from coefficients2");
 		//creation of testtable that takes data from testdata and compares it to adds probabilities that were created earlier
+		final long modelTime = System.currentTimeMillis();
+		
 		a = hc.sql("create table testscores as "
-				+ "select a.uid, a.class as actual, b.class as prediction, sum(probability) score, a.feature1,a.feature2 from testdata a "
+				+ "select a.uid, a.class as actual, b.class as prediction, max(probability) score, a.feature1,a.feature2 from testdata a "
 				+ "left join coefficients b on a.feature1 = b.feature1 and a.feature2 = b.feature2 "
 				+ "group by a.uid, a.class, b.class, a.feature1, a.feature2");
 		
@@ -96,6 +97,7 @@ public class SQLBayes {
 		a.show();
 		//acc on original data - 306059 / 581012 - 52%
 		final long endTime = System.currentTimeMillis();
+		System.out.println("Model creation time time: " + (modelTime - startTime) );
 		System.out.println("Execution time: " + (endTime - startTime) );
 		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();

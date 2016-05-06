@@ -50,7 +50,7 @@ public class SQLLinearRegressionSQLContext {
 						}
 					});
 			JavaRDD<Row>[] split = rowRDD.randomSplit(new double[] { 0.8, 0.2 });
-			DataFrame data = hc.createDataFrame(split[0], schema);
+			DataFrame data = hc.createDataFrame(rowRDD, schema);
 			data.registerTempTable("data");
 			DataFrame test = hc.createDataFrame(split[1], schema);
 			test.registerTempTable("testdata");

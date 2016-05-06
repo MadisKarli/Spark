@@ -92,8 +92,9 @@ public class SparkBayes {
 		
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
 		out.saveAsTextFile(args[0] +" "+ String.valueOf(endTime) +" Spark Bayes Out " +String.valueOf(inputData.count()));
-		System.out.println("Total execution time: " + (endTime - startTime));
+		
 		System.out.println("Model creation time: " + (modelTime - startTime));
+		System.out.println("Total execution time: " + (endTime - startTime));
 		jsc.close();
 	}
 }
