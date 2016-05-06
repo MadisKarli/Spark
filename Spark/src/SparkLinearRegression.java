@@ -1,10 +1,6 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -22,14 +18,14 @@ import scala.Tuple2;
 public class SparkLinearRegression {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("Spark Linear Regression");
+		SparkConf conf = new SparkConf().setAppName("Spark Linear Regression on " + args[0]);
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 		
-		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-		loggers.add(LogManager.getRootLogger());
-		for ( Logger logger : loggers ) {
-		    logger.setLevel(Level.ERROR);
-		}
+//		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+//		loggers.add(LogManager.getRootLogger());
+//		for ( Logger logger : loggers ) {
+//		    logger.setLevel(Level.ERROR);
+//		}
 		
 		
 		// Load and parse the data
@@ -45,6 +41,10 @@ public class SparkLinearRegression {
 			}
 		});
 		parsedData.cache();
+		
+		JavaRDD<LabeledPoint>[] split = parsedData.randomSplit(new double[] { 0.8, 0.2 });
+		JavaRDD<LabeledPoint> training = split[0]; // training set
+		JavaRDD<LabeledPoint> test = split[1]; // test set change to tmp[1]
 
 		// Building the model
 		int numIterations = 100;
@@ -53,11 +53,11 @@ public class SparkLinearRegression {
 		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
 		alg.setIntercept(true);
 		alg.optimizer().setNumIterations(numIterations);
-		final LinearRegressionModel model = alg.run(JavaRDD.toRDD(parsedData));
+		final LinearRegressionModel model = alg.run(JavaRDD.toRDD(training));
 		
 
 		// Evaluate model on training examples and compute training error
-		JavaRDD<Tuple2<Double, Double>> valuesAndPreds = parsedData
+		JavaRDD<Tuple2<Double, Double>> valuesAndPreds = test
 				.map(new Function<LabeledPoint, Tuple2<Double, Double>>() {
 					private static final long serialVersionUID = -1107559998389840064L;
 
@@ -77,9 +77,7 @@ public class SparkLinearRegression {
 				return Math.pow(pair._1()*500 - pair._2()*500, 2.0);
 			}
 		}).rdd()).mean();
-		System.out.println(model.intercept() + " intercept, weights " + model.weights());
-		System.out.println("training Mean Squared Error = " + MSE);
-		System.out.println("count " + parsedData.count());
+
 		
 		
 		final long endTime = System.currentTimeMillis();
@@ -92,9 +90,14 @@ public class SparkLinearRegression {
 		answer.add((double) (endTime-startTime));
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
 		out.saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" Spark linear regression out " + String.valueOf(parsedData.count()));
-
+		System.out.println(model.intercept() + " intercept, weights " + model.weights());
+		System.out.println("training Mean Squared Error = " + MSE);
 		System.out.println("Model creation time: " + (modelTime - startTime));
 		System.out.println("Execution time: " + (endTime - startTime));
 		jsc.close();
+		/*
+		 * 0.1905775934525417 intercept, weights [0.4928774614076809]
+		 * training Mean Squared Error = 5923.963237735686
+		 */
 	}
 }

@@ -21,7 +21,7 @@ import scala.Tuple2;
 public class SparkBayes {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
-		SparkConf sparkConf = new SparkConf().setAppName("Naive Bayes in Spark");
+		SparkConf sparkConf = new SparkConf().setAppName("Naive Bayes in Spark on " + args[0]);
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 
 		//uncomment to loggers off - great for troubleshooting on pc
@@ -45,9 +45,9 @@ public class SparkBayes {
 		});
 		inputData.cache();
 //		JavaRDD<LabeledPoint> inputData = MLUtils.loadLibSVMFile(jsc.sc(), path).toJavaRDD();
-		JavaRDD<LabeledPoint>[] tmp = inputData.randomSplit(new double[] { 0.9, 0.1 });
-		JavaRDD<LabeledPoint> training = tmp[0]; // training set
-		JavaRDD<LabeledPoint> test = tmp[1]; // test set change to tmp[1]
+		JavaRDD<LabeledPoint>[] split = inputData.randomSplit(new double[] { 0.8, 0.2 });
+		JavaRDD<LabeledPoint> training = split[0]; // training set
+		JavaRDD<LabeledPoint> test = split[1]; // test set change to tmp[1]
 		final NaiveBayesModel model = NaiveBayes.train(training.rdd(), 0.5);
 		JavaPairRDD<Double, Double> predictionAndLabel = test
 				.mapToPair(new PairFunction<LabeledPoint, Double, Double>() {
@@ -55,7 +55,7 @@ public class SparkBayes {
 
 					@Override
 					public Tuple2<Double, Double> call(LabeledPoint p) {
-						System.out.println(p.features() + " actual " + p.label() + " prediction " + model.predict(p.features()));
+//						System.out.println(p.features() + " actual " + p.label() + " prediction " + model.predict(p.features()));
 //						System.out.println(model.predictProbabilities(p.features()));
 						return new Tuple2<Double, Double>(model.predict(p.features()), p.label());
 					}
@@ -89,7 +89,10 @@ public class SparkBayes {
 //		}
 //		Save and load model
 // 		model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
-		
+		/* original data
+		 * training size 464997 test size 116015
+		 * accuracy 0.12333749946127656
+		 */
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
 		out.saveAsTextFile(args[0] +" "+ String.valueOf(endTime) +" Spark Bayes Out " +String.valueOf(inputData.count()));
 		

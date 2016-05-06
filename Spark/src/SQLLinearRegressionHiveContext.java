@@ -1,10 +1,6 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -21,17 +17,17 @@ import org.apache.spark.sql.types.StructType;
 public class SQLLinearRegressionHiveContext {
 		public static void main(String[] args){
 			final long startTime = System.currentTimeMillis();
-			SparkConf conf = new SparkConf().setAppName("Linear Regression in Spark SQL using HiveContext");
+			SparkConf conf = new SparkConf().setAppName("Linear Regression in Spark SQL using HiveContext on " + args[0]);
 			conf.set("eventLog.enabled", "false");
 			JavaSparkContext jsc = new JavaSparkContext(conf);
 			HiveContext hc = new HiveContext(jsc.sc());
 			hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 			
-			List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-			loggers.add(LogManager.getRootLogger());
-			for ( Logger logger : loggers ) {
-			    logger.setLevel(Level.ERROR);
-			}
+//			List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+//			loggers.add(LogManager.getRootLogger());
+//			for ( Logger logger : loggers ) {
+//			    logger.setLevel(Level.ERROR);
+//			}
 			
 			JavaRDD<String> points = jsc.textFile(args[0],8); 
 			String schemaString = "x y";
@@ -70,25 +66,33 @@ public class SQLLinearRegressionHiveContext {
 			
 			final long modelTime = System.currentTimeMillis();
 			//test the model and calculate mean squared error
-			a = hc.sql("select mean(error) MeanSquaredError from (select pow(y-(intercept +x*slope),2) error from data "
+			a = hc.sql("select avg(error) MeanSquaredError from "
+					+ "(select pow(y-(intercept +x*slope),2) error from testdata "
 					+ "left join (select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept from data) b on 1=1)a");
 			a.show();			
 			
-			//test predictions
-//			a = hc.sql("create table output as "
-//					+ "select d.x, l.slope+d.x*l.intercept prediction, d.y actual from data d join linearvalues l");
-//			a = hc.sql("select * from output");
-//			a.show();
-			
 			//this calculates R2
 //			a = hc.sql("select (slope * sum(y) + intercept * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by intercept,slope");
-
+			
 			
 			final long endTime = System.currentTimeMillis();
 			a.rdd().saveAsTextFile((args[0]+" "+String.valueOf(endTime) +" SQL linearregression hivecontext out ")+String.valueOf(rowRDD.count()));
 			System.out.println("Model creation time time: " + (modelTime - startTime) );
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
+			/*
+			 *  +------------------+-----------------+
+			 *	|         intercept|            slope|
+			 *	+------------------+-----------------+
+			 *	|0.5161316017291351|78.79018764377196|
+			 *	+------------------+-----------------+
+			 *	
+			 *	+-----------------+
+			 *	| MeanSquaredError|
+			 *	+-----------------+
+			 *	|6327.865714780089|
+			 *	+-----------------+
+			 */
 	}
 }
 

@@ -17,7 +17,7 @@ public class SQLBayes {
 	//http://nuncupatively.blogspot.com.ee/2011/07/naive-bayes-in-sql.html
 	public static void main(String[] args){
 		final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("Naive Bayes in Spark SQL");
+		SparkConf conf = new SparkConf().setAppName("Naive Bayes in Spark SQL on " + args[0]);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		HiveContext hc = new HiveContext(sc.sc());
 		hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
@@ -70,7 +70,7 @@ public class SQLBayes {
 				+ "sum (value) over (partition by class) as class_count, "
 				+ "b.totals as total "
 				+ "from agg left join (select count(*) totals from data) b on 1=1");//better total
-
+		
 
 		/* next table adds probabilities to previous table
 		 * class_count/tot is the prior
@@ -101,5 +101,12 @@ public class SQLBayes {
 		System.out.println("Execution time: " + (endTime - startTime) );
 		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();
+		/*
+		 *+------------------+
+		 *|          accuracy|
+		 *+------------------+
+		 *|0.4662694318338148|
+		 *+------------------+
+		 */
 	}
 }

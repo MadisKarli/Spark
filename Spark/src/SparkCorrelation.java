@@ -14,7 +14,7 @@ import scala.Tuple2;
 public class SparkCorrelation {
 	public static void main(String[] args) {
 		 final long startTime = System.currentTimeMillis();
-		SparkConf conf = new SparkConf().setAppName("Spark Correlation");
+		SparkConf conf = new SparkConf().setAppName("Spark Correlation " + args[0]);
 		conf.set("eventLog.enabled", "false");
 		JavaSparkContext jsc = new JavaSparkContext(conf);
 
@@ -48,7 +48,7 @@ public class SparkCorrelation {
 		answer.add((double) (endTime-startTime));
 		answer.add(correlation);
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
-		out.saveAsTextFile(args[0]+String.valueOf(endTime) +"Spark Correlation Out " + String.valueOf(XY.count()));
+		out.saveAsTextFile(args[0]+String.valueOf(endTime) +" Spark Correlation Out " + String.valueOf(XY.count()));
 		jsc.close();
 		System.out.println("Execution time: " + (endTime - startTime) );
 		System.out.println("Correlation is: " + correlation);
