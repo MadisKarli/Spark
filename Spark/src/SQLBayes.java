@@ -1,6 +1,10 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -22,11 +26,11 @@ public class SQLBayes {
 		HiveContext hc = new HiveContext(sc.sc());
 		hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 		
-//		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-//		loggers.add(LogManager.getRootLogger());
-//		for ( Logger logger : loggers ) {
-//		    logger.setLevel(Level.ERROR);
-//		}
+		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+		loggers.add(LogManager.getRootLogger());
+		for ( Logger logger : loggers ) {
+		    logger.setLevel(Level.ERROR);
+		}
 		
 		JavaRDD<String> points = sc.textFile(args[0],8); 
 		String schemaString = "uid feature1 feature2 class"; //change here

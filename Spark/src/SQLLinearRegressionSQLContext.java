@@ -53,6 +53,8 @@ public class SQLLinearRegressionSQLContext {
 			//calculate model aka find slope and count
 			DataFrame a = hc.sql("select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept from data");
 			a.show();
+			
+			final long modelTime = System.currentTimeMillis();
 			//test the model and calculate mean squared error
 			a = hc.sql("select avg(error) MeanSquaredError from "
 					+ "(select pow(y-(intercept +x*slope),2) error from testdata "
@@ -60,6 +62,7 @@ public class SQLLinearRegressionSQLContext {
 			a.show();
 			final long endTime = System.currentTimeMillis();
 			a.rdd().saveAsTextFile((args[0]+ " " + String.valueOf(endTime) + " Spark SQL linearregression sqlcontext out ")+String.valueOf(rowRDD.count()));
+			System.out.println("Model creation time time: " + (modelTime - startTime) );
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
 			/* on initial data

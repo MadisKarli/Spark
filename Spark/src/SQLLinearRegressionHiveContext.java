@@ -61,7 +61,7 @@ public class SQLLinearRegressionHiveContext {
 //			a = hc.sql("drop table linearvalues");
 //			a = hc.sql("drop table output");
 			//calculate model aka find slope and count
-			a = hc.sql("select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) intercept, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) slope from data");
+			a = hc.sql("select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept from data");
 			a.show();
 			
 			final long modelTime = System.currentTimeMillis();
