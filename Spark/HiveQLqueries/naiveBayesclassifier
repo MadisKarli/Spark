@@ -1,0 +1,38 @@
+create external table bs (uid int, feature1 int, feature2 int, slope int, h1 int,v1 int, h2 int, hill1 int, hill2 int, hill3 int, h3 int, wild int, a1 int,a2 int, a3 int, a4 int, a5 int, a6 int, a7 int, a8 int, a9 int, a10 int, a11 int, a12 int, a13 int, a14 int, a15 int, a16 int, a17 int, a18 int, a19 int, a20 int, a21 int, a22 int, a23 int, a24 int, a25 int, a26 int, a27 int, a28 int, a29 int, a30 int, a31 int, a32 int, a33 int, a34 int, a35 int, a36 int, a37 int, a38 int, a39 int, a40 int, a42 int, a43 int,a44 int, class int)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+location '/user/labuser/KoppelBachelor/backup/forest1/train';
+
+create external table bstest (uid int, feature1 int, feature2 int, slope int, h1 int,v1 int, h2 int, hill1 int, hill2 int, hill3 int, h3 int, wild int, a1 int,a2 int, a3 int, a4 int, a5 int, a6 int, a7 int, a8 int, a9 int, a10 int, a11 int, a12 int, a13 int, a14 int, a15 int, a16 int, a17 int, a18 int, a19 int, a20 int, a21 int, a22 int, a23 int, a24 int, a25 int, a26 int, a27 int, a28 int, a29 int, a30 int, a31 int, a32 int, a33 int, a34 int, a35 int, a36 int, a37 int, a38 int, a39 int, a40 int, a42 int, a43 int,a44 int, class int)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+location '/user/labuser/KoppelBachelor/backup/forest1/test';
+
+create table agg2 stored as textfile as 
+select feature1,feature2, sum(1) value, class from bs group by feature1,feature2, class;
+
+create table coefficients21 stored as textfile 
+as 
+select class, feature1, feature2, 
+sum (value) over (partition by feature1, class) as val1, 
+sum (value) over (partition by feature2, class) as val2, 
+sum (value) over (partition by class) as class_count, 
+b.totals as total 
+from agg2 left join (select count(*) totals from bs) b on 1=1;
+
+create table coefficients1 stored as textfile 
+as 
+select a.*, log(class_count/total)+log(val1/class_count)+log(val2/class_count) probability from coefficients21 a;
+
+create table testscores1 stored as textfile 
+as 
+select a.uid, a.class as actual, b.class as prediction, max(probability) score, a.feature1,a.feature2 from bstest a 
+left join coefficients1 b on a.feature1 = b.feature1 and a.feature2 = b.feature2 
+group by a.uid, a.class, b.class, a.feature1, a.feature2;
+
+create table predictions1 stored as textfile as 
+select a.uid, actual, prediction, score,feature1, feature2 from testscores1 a 
+inner join (select c.uid, max(score) maxscore from testscores1 c group by c.uid) b on a.uid = b.uid and a.score = maxscore;
+select b.correct/count(*) accuracy from bstest left join (select count(*) correct from predictions1 where actual = prediction) b on 1 = 1 group by b.correct;
