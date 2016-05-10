@@ -68,6 +68,15 @@ public class SQLBayes {
 				+ ") s");
 		
 
+//		a = hc.sql("create table testscores as "
+//				+ "select uid, t.class tc, a.class ac , "
+//				+ "(class_prob*"
+//				+ "(1/(sqrt(2*3.145*var1*var1))*exp(-(feature1-mean1)*(feature1-mean1)/(2*var1*var1)))*"
+//				+ "(1/(sqrt(2*3.145*var2*var2))*exp(-(feature2-mean2)*(feature2-mean2)/(2*var2*var2)))"
+//				+ ") as coef"
+//				+ " from testdata t "
+//				+ "inner join agg a on 1 = 1 ");
+		
 		a = hc.sql("create table testscores as "
 				+ "select uid, t.class tc, a.class ac , "
 				+ "(log(class_prob) +"
@@ -89,8 +98,8 @@ public class SQLBayes {
 		//https://books.google.ee/books?id=yqhPCwAAQBAJ&pg=PA165&lpg=PA165&dq=spark+predicted+posterior+class+probabilities+from+the+trained+model,+in+the+same+order+as+class+labels&source=bl&ots=iMTMROwPFY&sig=cUI_4H2Br-sLElhbYpvkzd99zTY&hl=et&sa=X&ved=0ahUKEwi_yor2w8PMAhVHWCwKHTlzBRAQ6AEISTAG#v=onepage&q=spark%20predicted%20posterior%20class%20probabilities%20from%20the%20trained%20model%2C%20in%20the%20same%20order%20as%20class%20labels&f=false
 		//show correct predictions - for this divide #of correct predictions with # of testdata
 		//
-		//Model creation time time: 29583
-		//Execution time: 47589
+		//Model creation time time: 26306
+		//Execution time: 47698
 		//acc on original data - 306059 / 581012 - 52%
 		final long endTime = System.currentTimeMillis();
 		System.out.println("Model creation time time: " + (modelTime - startTime) );
