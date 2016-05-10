@@ -1,10 +1,6 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -26,11 +22,11 @@ public class SQLBayes {
 		HiveContext hc = new HiveContext(sc.sc());
 		hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 		
-		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-		loggers.add(LogManager.getRootLogger());
-		for ( Logger logger : loggers ) {
-		    logger.setLevel(Level.ERROR);
-		}
+//		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+//		loggers.add(LogManager.getRootLogger());
+//		for ( Logger logger : loggers ) {
+//		    logger.setLevel(Level.ERROR);
+//		}
 		
 		JavaRDD<String> points = sc.textFile(args[0],8); 
 		String schemaString = "uid feature1 feature2 class"; //change here
@@ -45,7 +41,7 @@ public class SQLBayes {
 
 					public Row call(String record) throws Exception {
 						String[] fields = record.split(",");
-						return RowFactory.create(fields[0], fields[1], fields[2], fields[55]); //change here
+						return RowFactory.create(fields[0], fields[2], fields[3], fields[55]); //change here
 					}
 				});
 		JavaRDD<Row>[] split = rowRDD.randomSplit(new double[] { 0.8, 0.2 });
@@ -57,55 +53,57 @@ public class SQLBayes {
 
 		DataFrame a;
 		a = hc.sql("drop table agg");
-		a = hc.sql("drop table coefficients");
-		a = hc.sql("drop table coefficients2");
 		a = hc.sql("drop table testscores");
 		a = hc.sql("drop table predictions");
 		
-		//this creates a table from input data. Most important thing here is sum(1) value that counts the occurence of feature1 and feature2
 		a = hc.sql("create table agg as "
-				+ "select feature1,feature2, sum(1) value, class from data group by feature1,feature2, class");
-		
-		//here a table is created that counts class, feature1, feature2 and feature1 given class, feature given class and total class count
-		a = hc.sql("create table coefficients2 as "
-				+ "select class, feature1, feature2, "
-				+ "sum (value) over (partition by feature1, class) as val1, "
-				+ "sum (value) over (partition by feature2, class) as val2, "
-				+ "sum (value) over (partition by class) as class_count, "
-				+ "b.totals as total "
-				+ "from agg left join (select count(*) totals from data) b on 1=1");//better total
+				+ " select *, class_sum/sum(class_sum) over () as class_prob from "
+				+ "("
+				+ "select sum(feature1)/count(feature1) as mean1,"
+				+ " sum(feature2)/count(feature2) as mean2, "
+				+ " variance(feature1) as var1,"
+				+ " variance(feature2) as var2, "
+				+ " class, count(*) as class_sum "
+				+ " from data group by class"
+				+ ") s");
 		
 
-		/* next table adds probabilities to previous table
-		 * class_count/tot is the prior
-		 * val1/class_count is P(val1|class) val1 - number of times feature1 is present in class
-		 * val2/class_count is P(val2|class) val2 - number of times feature2 is present in class
-		 */
-		a = hc.sql("create table coefficients  as "
-				+ "select *, log(class_count/total)+log(val1/class_count)+log(val2/class_count) probability from coefficients2");
-		//creation of testtable that takes data from testdata and compares it to adds probabilities that were created earlier
-		final long modelTime = System.currentTimeMillis();
-		
 		a = hc.sql("create table testscores as "
-				+ "select a.uid, a.class as actual, b.class as prediction, max(probability) score, a.feature1,a.feature2 from testdata a "
-				+ "left join coefficients b on a.feature1 = b.feature1 and a.feature2 = b.feature2 "
-				+ "group by a.uid, a.class, b.class, a.feature1, a.feature2");
-		
-		//now select only pest predictions
+				+ "select uid, t.class tc, a.class ac , "
+				+ "(log(class_prob) +"
+				+ "log(1/(sqrt(2*3.145*pow(var1,2)))*exp(-pow(feature1-mean1,2)/(2*pow(var1,2)))) + "
+				+ "log(1/(sqrt(2*3.145*pow(var2,2)))*exp(-pow(feature2-mean2,2)/(2*pow(var2,2))))"
+				+ ") as coef"
+				+ " from testdata t "
+				+ "inner join agg a on 1 = 1 ");
+
+		final long modelTime = System.currentTimeMillis();
+			
 		a = hc.sql("create table predictions as "
-				+ "select a.uid, actual, prediction, score,feature1, feature2 from testscores a "
-				+ "inner join (select c.uid, max(score) maxscore from testscores c group by c.uid) b on a.uid = b.uid and a.score = maxscore");
+				+ " Select uid, tc, ac , coef, max(coef) over (partition by uid) as best_coef from testscores");
+		
+
+		a = hc.sql("select  sum(if(tc = ac and best_coef = coef, 1, 0))/count(distinct uid) accuracy from predictions");
+		a.show();
+		//select sum(if(tc = ac and best_coef = coef, 1, 0))/count(distinct uid) acc from predictions
 		//https://books.google.ee/books?id=yqhPCwAAQBAJ&pg=PA165&lpg=PA165&dq=spark+predicted+posterior+class+probabilities+from+the+trained+model,+in+the+same+order+as+class+labels&source=bl&ots=iMTMROwPFY&sig=cUI_4H2Br-sLElhbYpvkzd99zTY&hl=et&sa=X&ved=0ahUKEwi_yor2w8PMAhVHWCwKHTlzBRAQ6AEISTAG#v=onepage&q=spark%20predicted%20posterior%20class%20probabilities%20from%20the%20trained%20model%2C%20in%20the%20same%20order%20as%20class%20labels&f=false
 		//show correct predictions - for this divide #of correct predictions with # of testdata
-		a = hc.sql("select b.correct/count(*) accuracy from test left join (select count(*) correct from predictions where actual = prediction) b on 1 = 1 group by b.correct");
-		a.show();
+		//
+		//Model creation time time: 29583
+		//Execution time: 47589
 		//acc on original data - 306059 / 581012 - 52%
 		final long endTime = System.currentTimeMillis();
 		System.out.println("Model creation time time: " + (modelTime - startTime) );
 		System.out.println("Execution time: " + (endTime - startTime) );
 		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();
-		/*
+		/*after
+		 *+------------------+
+		 *|          accuracy|
+		 *+------------------+
+		 *|0.4868104278442702|
+		 *+------------------+
+		 *before
 		 *+------------------+
 		 *|          accuracy|
 		 *+------------------+
