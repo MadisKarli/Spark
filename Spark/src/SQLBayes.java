@@ -57,43 +57,49 @@ public class SQLBayes {
 		
 
 		DataFrame a;
-//		a = hc.sql("drop table agg");
-//		a = hc.sql("drop table coefficients");
-//		a = hc.sql("drop table coefficients2");
 		a = hc.sql("drop table testscores");
-//		a = hc.sql("drop table predictions");
 		a = hc.sql("drop table fcoefs");
 		a = hc.sql("drop table f2coefs");
 
 		
 		//creates table for 
-		a = hc.sql("create table fcoefs as select feature1, class, featurecount/classcount as f1coef, classcount/total as ccoef, featurecount, classcount, total from "
-				+ "(select feature1, class, sum(value) over (partition by feature1, class) featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
+		a = hc.sql("create table fcoefs as select feature1, class, log(featurecount+0.5/classcount) as f1coef, log(classcount+0.5/total) as ccoef, featurecount, classcount, total from "
+				+ "(select feature1, class, value as featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
 				+ "(select feature1, sum(1) value, class from data group by feature1, class)a)b");
 //		a = hc.sql("select * from fcoefs");
 //		a.show();
-		a = hc.sql("create table f2coefs as select feature2, class, featurecount/classcount as f2coef, classcount/total as ccoef, featurecount, classcount, total from "
-				+ "(select feature2, class, sum(value) over (partition by feature2, class) featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
+		a = hc.sql("create table f2coefs as select feature2, class, log(featurecount+0.5/classcount) as f2coef, log(classcount+0.5/total) as ccoef, featurecount, classcount, total from "
+				+ "(select feature2, class, value as featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
 				+ "(select feature2, sum(1) value, class from data group by feature2, class)a)b");
 //		a = hc.sql("select * from f2coefs");
 //		a.show();
-		final long modelTime = System.currentTimeMillis();
-		a = hc.sql("create table testscores as select uid, t.feature1, t.feature2, t.class as actual, a.class as prediction, f1coef, ccoef, f2coef, f1coef*ccoef*f2coef score from testdata t "
+//		final long modelTime = System.currentTimeMillis();
+		a = hc.sql("create table testscores as select uid, t.feature1, t.feature2, t.class as actual, a.class as prediction, f1coef+ccoef+f2coef score from testdata t "
 				+ "inner join "
 				+ "(select feature1, class, f1coef, ccoef from fcoefs)a on t.feature1 = a.feature1 "
 				+ "inner join "
 				+ "(select feature2, class, f2coef from f2coefs)b on t.feature2 = b.feature2 and a.class = b.class");
 //		a = hc.sql("select * from testscores");
 //		a.show();
-		
-		a = hc.sql("select sum(if(actual = prediction, 1, 0))/count(*) accuracy from (select actual, prediction from testscores a "
-				+ " inner join (select c.uid, max(score) maxscore from testscores c group by c.uid) b on a.uid = b.uid and a.score = maxscore)a");
+//		a = hc.sql("select * from testdata");
+//		a.show();
+//		a = hc.sql("select count(*) scoressize from testscores");
+//		a.show();
+//		a = hc.sql("select count(*) datasize from testdata");
+//		a.show();
+		a = hc.sql("select correct/count(*) from testdata left join "
+				+ "(select sum(if(actual = prediction, 1, 0)) correct from "
+				+ "(select actual, prediction, score, max(score) over (partition by uid) as maxscore from testscores)a  "
+				+ "where score = maxscore) b on 1=1 group by correct");
 		a.show();
-				//acc on original data - 67%
+		//muuda see asi ära
+
+		
+				//acc on original data - 67%, 52181
 		final long endTime = System.currentTimeMillis();
-		System.out.println("Model creation time time: " + (modelTime - startTime) );
+//		System.out.println("Model creation time time: " + (modelTime - startTime) );
 		System.out.println("Execution time: " + (endTime - startTime) );
-		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
+//		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();
 		/*
 		 *+------------------+
