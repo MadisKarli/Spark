@@ -1,0 +1,19 @@
+create external table lr1 (id string,duration int,bitratetotal int,bitratevideo int, x int,y int,framerate int,framerateest int,codec string,category string,url string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY "\t"
+LINES TERMINATED BY "\n"
+location '/user/labuser/KoppelBachelor/backup/yt1/train'; 
+
+create external table lr1test (id string,duration int,bitratetotal int,bitratevideo int, x int,y int,framerate int,framerateest int,codec string,category string,url string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY "\t"
+LINES TERMINATED BY "\n"
+location '/user/labuser/KoppelBachelor/backup/yt1/test'; 
+
+select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) intercept, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) slope from lr1;
+
+select avg(error) MeanSquaredError from 
+ (select pow(y-(intercept +x*slope),2) error from lr1test
+ left join 
+ (select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept 
+ from lr1)b on 1=1)a

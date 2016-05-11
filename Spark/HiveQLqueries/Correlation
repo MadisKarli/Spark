@@ -1,0 +1,7 @@
+create external table cr_data (id string,duration int,bitratetotal int,bitratevideo int, x int,y int,framerate int,framerateest int,codec string,category string,url string)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY "\t"
+LINES TERMINATED BY "\n"
+location '/user/labuser/KoppelBachelor/backup/ytvideos';
+
+select (count(*) * sum(x * y) - sum(x) * sum(y)) /(sqrt(count(*) * sum(x * x) - sum(x) * sum(x)) *sqrt(count(*) * sum(y * y) - sum(y) * sum(y))) from cr_data;
