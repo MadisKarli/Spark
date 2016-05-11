@@ -63,13 +63,13 @@ public class SQLBayes {
 
 		
 		//creates table for 
-		a = hc.sql("create table fcoefs as select feature1, class, log(featurecount+0.5/classcount) as f1coef, log(classcount+0.5/total) as ccoef, featurecount, classcount, total from "
+		a = hc.sql("create table fcoefs as select feature1, class, log((featurecount+0.5)/classcount) as f1coef, log((classcount+0.5)/total) as ccoef from "
 				+ "(select feature1, class, value as featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
 				+ "(select feature1, sum(1) value, class from data group by feature1, class)a)b");
 //		a = hc.sql("select * from fcoefs");
 //		a.show();
-		a = hc.sql("create table f2coefs as select feature2, class, log(featurecount+0.5/classcount) as f2coef, log(classcount+0.5/total) as ccoef, featurecount, classcount, total from "
-				+ "(select feature2, class, value as featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
+		a = hc.sql("create table f2coefs as select feature2, class, log((featurecount+0.5)/classcount) as f2coef  from "
+				+ "(select feature2, class, value as featurecount,sum(value) over (partition by class) classcount from "
 				+ "(select feature2, sum(1) value, class from data group by feature2, class)a)b");
 //		a = hc.sql("select * from f2coefs");
 //		a.show();
@@ -87,7 +87,7 @@ public class SQLBayes {
 //		a.show();
 //		a = hc.sql("select count(*) datasize from testdata");
 //		a.show();
-		a = hc.sql("select correct/count(*) from testdata left join "
+		a = hc.sql("select correct/count(*) accuracy from testdata left join "
 				+ "(select sum(if(actual = prediction, 1, 0)) correct from "
 				+ "(select actual, prediction, score, max(score) over (partition by uid) as maxscore from testscores)a  "
 				+ "where score = maxscore) b on 1=1 group by correct");
@@ -105,7 +105,7 @@ public class SQLBayes {
 		 *+------------------+
 		 *|          accuracy|
 		 *+------------------+
-		 *|0.4662694318338148|
+		 *|0.6347932629253814|
 		 *+------------------+
 		 */
 	}
