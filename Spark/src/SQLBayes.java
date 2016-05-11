@@ -1,6 +1,11 @@
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -22,11 +27,11 @@ public class SQLBayes {
 		HiveContext hc = new HiveContext(sc.sc());
 		hc.sql("SET	hive.metastore.warehouse.dir=file:///home/madis/workspace/SparkHiveSQL/tables");
 		
-//		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
-//		loggers.add(LogManager.getRootLogger());
-//		for ( Logger logger : loggers ) {
-//		    logger.setLevel(Level.ERROR);
-//		}
+		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+		loggers.add(LogManager.getRootLogger());
+		for ( Logger logger : loggers ) {
+		    logger.setLevel(Level.ERROR);
+		}
 		
 		JavaRDD<String> points = sc.textFile(args[0],8); 
 		String schemaString = "uid feature1 feature2 class"; //change here
@@ -41,7 +46,7 @@ public class SQLBayes {
 
 					public Row call(String record) throws Exception {
 						String[] fields = record.split(",");
-						return RowFactory.create(fields[0], fields[2], fields[3], fields[55]); //change here
+						return RowFactory.create(fields[0], fields[1], fields[2], fields[55]); //change here
 					}
 				});
 		JavaRDD<Row>[] split = rowRDD.randomSplit(new double[] { 0.8, 0.2 });
@@ -52,67 +57,45 @@ public class SQLBayes {
 		
 
 		DataFrame a;
-		a = hc.sql("drop table agg");
+//		a = hc.sql("drop table agg");
+//		a = hc.sql("drop table coefficients");
+//		a = hc.sql("drop table coefficients2");
 		a = hc.sql("drop table testscores");
-		a = hc.sql("drop table predictions");
-		
-		a = hc.sql("create table agg as "
-				+ " select *, class_sum/sum(class_sum) over () as class_prob from "
-				+ "("
-				+ "select sum(feature1)/count(feature1) as mean1,"
-				+ " sum(feature2)/count(feature2) as mean2, "
-				+ " variance(feature1) as var1,"
-				+ " variance(feature2) as var2, "
-				+ " class, count(*) as class_sum "
-				+ " from data group by class"
-				+ ") s");
-		
+//		a = hc.sql("drop table predictions");
+		a = hc.sql("drop table fcoefs");
+		a = hc.sql("drop table f2coefs");
 
-//		a = hc.sql("create table testscores as "
-//				+ "select uid, t.class tc, a.class ac , "
-//				+ "(class_prob*"
-//				+ "(1/(sqrt(2*3.145*var1*var1))*exp(-(feature1-mean1)*(feature1-mean1)/(2*var1*var1)))*"
-//				+ "(1/(sqrt(2*3.145*var2*var2))*exp(-(feature2-mean2)*(feature2-mean2)/(2*var2*var2)))"
-//				+ ") as coef"
-//				+ " from testdata t "
-//				+ "inner join agg a on 1 = 1 ");
 		
-		a = hc.sql("create table testscores as "
-				+ "select uid, t.class tc, a.class ac , "
-				+ "(log(class_prob) +"
-				+ "log(1/(sqrt(2*3.145*pow(var1,2)))*exp(-pow(feature1-mean1,2)/(2*pow(var1,2)))) + "
-				+ "log(1/(sqrt(2*3.145*pow(var2,2)))*exp(-pow(feature2-mean2,2)/(2*pow(var2,2))))"
-				+ ") as coef"
-				+ " from testdata t "
-				+ "inner join agg a on 1 = 1 ");
-
+		//creates table for 
+		a = hc.sql("create table fcoefs as select feature1, class, featurecount/classcount as f1coef, classcount/total as ccoef, featurecount, classcount, total from "
+				+ "(select feature1, class, sum(value) over (partition by feature1, class) featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
+				+ "(select feature1, sum(1) value, class from data group by feature1, class)a)b");
+//		a = hc.sql("select * from fcoefs");
+//		a.show();
+		a = hc.sql("create table f2coefs as select feature2, class, featurecount/classcount as f2coef, classcount/total as ccoef, featurecount, classcount, total from "
+				+ "(select feature2, class, sum(value) over (partition by feature2, class) featurecount,sum(value) over (partition by class) classcount, sum(value) over () total from "
+				+ "(select feature2, sum(1) value, class from data group by feature2, class)a)b");
+//		a = hc.sql("select * from f2coefs");
+//		a.show();
 		final long modelTime = System.currentTimeMillis();
-			
-		a = hc.sql("create table predictions as "
-				+ " Select uid, tc, ac , coef, max(coef) over (partition by uid) as best_coef from testscores");
+		a = hc.sql("create table testscores as select uid, t.feature1, t.feature2, t.class as actual, a.class as prediction, f1coef, ccoef, f2coef, f1coef*ccoef*f2coef score from testdata t "
+				+ "inner join "
+				+ "(select feature1, class, f1coef, ccoef from fcoefs)a on t.feature1 = a.feature1 "
+				+ "inner join "
+				+ "(select feature2, class, f2coef from f2coefs)b on t.feature2 = b.feature2 and a.class = b.class");
+//		a = hc.sql("select * from testscores");
+//		a.show();
 		
-
-		a = hc.sql("select  sum(if(tc = ac and best_coef = coef, 1, 0))/count(distinct uid) accuracy from predictions");
+		a = hc.sql("select sum(if(actual = prediction, 1, 0))/count(*) accuracy from (select actual, prediction from testscores a "
+				+ " inner join (select c.uid, max(score) maxscore from testscores c group by c.uid) b on a.uid = b.uid and a.score = maxscore)a");
 		a.show();
-		//select sum(if(tc = ac and best_coef = coef, 1, 0))/count(distinct uid) acc from predictions
-		//https://books.google.ee/books?id=yqhPCwAAQBAJ&pg=PA165&lpg=PA165&dq=spark+predicted+posterior+class+probabilities+from+the+trained+model,+in+the+same+order+as+class+labels&source=bl&ots=iMTMROwPFY&sig=cUI_4H2Br-sLElhbYpvkzd99zTY&hl=et&sa=X&ved=0ahUKEwi_yor2w8PMAhVHWCwKHTlzBRAQ6AEISTAG#v=onepage&q=spark%20predicted%20posterior%20class%20probabilities%20from%20the%20trained%20model%2C%20in%20the%20same%20order%20as%20class%20labels&f=false
-		//show correct predictions - for this divide #of correct predictions with # of testdata
-		//
-		//Model creation time time: 26306
-		//Execution time: 47698
-		//acc on original data - 306059 / 581012 - 52%
+				//acc on original data - 67%
 		final long endTime = System.currentTimeMillis();
 		System.out.println("Model creation time time: " + (modelTime - startTime) );
 		System.out.println("Execution time: " + (endTime - startTime) );
 		a.rdd().saveAsTextFile(args[0]+" "+String.valueOf(endTime) +" SQL Bayes out " + String.valueOf(rowRDD.count()));
 		sc.close();
-		/*after
-		 *+------------------+
-		 *|          accuracy|
-		 *+------------------+
-		 *|0.4868104278442702|
-		 *+------------------+
-		 *before
+		/*
 		 *+------------------+
 		 *|          accuracy|
 		 *+------------------+
