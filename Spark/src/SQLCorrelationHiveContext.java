@@ -52,9 +52,5 @@ public class SQLCorrelationHiveContext {
 		a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +" SQL correlation hivecontext out ")+String.valueOf(rowRDD.count()));
 		System.out.println("Execution time: " + (endTime - startTime));
 		jsc.close();
-		/*
-		 * with corr - 0.9202032394442796
-		 */
-
 	}
 }
