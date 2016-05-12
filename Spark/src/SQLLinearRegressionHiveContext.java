@@ -52,14 +52,11 @@ public class SQLLinearRegressionHiveContext {
 			test.registerTempTable("testdata");
 			
 			
-			//https://ayadshammout.com/2013/11/30/t-sql-linear-regression-function/
 			/*
 			 * SparkSQL (as of 1.6) does not support storing values in variables. This can be overcome by storing values in minitables, storing variables is also possible when using shell.
 			 * Following uses 4*count(*), 2*sum(x) and sum(y). Let's hope Optimization gods are smart enough to see this.
 			 */
 			DataFrame a;
-//			a = hc.sql("drop table linearvalues");
-//			a = hc.sql("drop table output");
 			//calculate model aka find slope and count
 			a = hc.sql("select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept from data");
 			a.show();
@@ -71,8 +68,6 @@ public class SQLLinearRegressionHiveContext {
 					+ "left join (select ((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x), 2)) slope, avg(y)-((count(*)*sum(x*y))-(sum(x)*sum(y)))/((count(*)*sum(pow(x,2)))-pow(sum(x),2))*avg(x) intercept from data) b on 1=1)a");
 			a.show();			
 			
-			//this calculates R2
-//			a = hc.sql("select (slope * sum(y) + intercept * sum(x*y) - sum(y) * sum(y)/count(*))/(sum(y*y)-sum(y) * sum(y) / count(*)) R2 from data, linearvalues group by intercept,slope");
 			
 			
 			final long endTime = System.currentTimeMillis();
@@ -80,19 +75,6 @@ public class SQLLinearRegressionHiveContext {
 			System.out.println("Model creation time time: " + (modelTime - startTime) );
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
-			/*
-			 *  +------------------+-----------------+
-			 *	|         intercept|            slope|
-			 *	+------------------+-----------------+
-			 *	|0.5161316017291351|78.79018764377196|
-			 *	+------------------+-----------------+
-			 *	
-			 *	+-----------------+
-			 *	| MeanSquaredError|
-			 *	+-----------------+
-			 *	|6327.865714780089|
-			 *	+-----------------+
-			 */
 	}
 }
 

@@ -45,39 +45,14 @@ public class SQLCorrelationSQLContext {
 					});
 			DataFrame data = hc.createDataFrame(rowRDD, schema);
 			data.registerTempTable("Data");
-			//Corr uses pearson method
-//			DataFrame a = hc.sql("select corr(x,y) Correlation from Data");
-//			a.show();
-//			a = hc.sql("select sum(x-xavg) from (select avg(x) xavg, avg(y) yavg from Data)a "
-//					+ "left join (select x, y from Data) b on 1=1");
-//			a.show();
 			DataFrame a = hc.sql("select (count(*) * sum(x * y) - sum(x) * sum(y)) /"
 					+ " (sqrt(count(*) * sum(x * x) - sum(x) * sum(x)) *sqrt(count(*) * sum(y * y) - sum(y) * sum(y)))"
 					+ " from Data");
 			a.show();
-			//algorithm from wikipedia
-			/*
-			 * avgx 561.018
-			 * avgy 368.399
-			 */
 			final long endTime = System.currentTimeMillis();
 			a.rdd().saveAsTextFile((args[0]+String.valueOf(endTime) +" SQL correlation sqlcontext out ") + String.valueOf(rowRDD.count()));
 			System.out.println("Execution time: " + (endTime - startTime) );
 			sc.close();
-			/*
-			 * 160 000
-			 * 0.9202032394442804
-			 * sql Execution time: 6799
-			 * 1 mil
-			 * sql	Execution time: 8668
-			 * hc	Execution time: 16190
-			 * 5 mil
-			 * sql	Execution time: 22111
-			 * hc	Execution time: 29213
-			 * 10 mil - 0.8352207245283236
-			 * sql 	Execution time: 47694
-			 * hc 	Execution time: 73743
-			 */
 	}
 }
 

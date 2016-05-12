@@ -24,7 +24,7 @@ public class SparkBayes {
 		SparkConf sparkConf = new SparkConf().setAppName("Naive Bayes in Spark on " + args[0]);
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 
-		//uncomment to loggers off - great for troubleshooting on pc
+		//uncomment to turn loggers off
 //		List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
 //		loggers.add(LogManager.getRootLogger());
 //		for ( Logger logger : loggers ) {
@@ -44,7 +44,6 @@ public class SparkBayes {
 			}
 		});
 		inputData.cache();
-//		JavaRDD<LabeledPoint> inputData = MLUtils.loadLibSVMFile(jsc.sc(), path).toJavaRDD();
 		JavaRDD<LabeledPoint>[] split = inputData.randomSplit(new double[] { 0.8, 0.2 });
 		JavaRDD<LabeledPoint> training = split[0]; // training set
 		JavaRDD<LabeledPoint> test = split[1]; // test set change to tmp[1]
@@ -55,8 +54,6 @@ public class SparkBayes {
 
 					@Override
 					public Tuple2<Double, Double> call(LabeledPoint p) {
-//						System.out.println(p.features() + " actual " + p.label() + " prediction " + model.predict(p.features()));
-//						System.out.println(model.predictProbabilities(p.features()));
 						return new Tuple2<Double, Double>(model.predict(p.features()), p.label());
 					}
 				});
@@ -83,16 +80,6 @@ public class SparkBayes {
 		answer.add((double) (modelTime - startTime));
 		answer.add((double) (endTime - startTime));
 		
-//		for (double el : model.pi()) {
-//			answer.add(el);
-//			System.out.println(el);
-//		}
-//		Save and load model
-// 		model.save(jsc.sc(), "target/tmp/myNaiveBayesModel");
-		/* original data
-		 * training size 464997 test size 116015
-		 * accuracy 0.12333749946127656
-		 */
 		JavaDoubleRDD out = jsc.parallelizeDoubles(answer);
 		out.saveAsTextFile(args[0] +" "+ String.valueOf(endTime) +" Spark Bayes Out " +String.valueOf(inputData.count()));
 		

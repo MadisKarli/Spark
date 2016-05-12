@@ -14,7 +14,6 @@ import org.apache.spark.mllib.regression.LinearRegressionWithSGD;
 // $example on$
 import scala.Tuple2;
 
-//http://archive.ics.uci.edu/ml/datasets/Online+Video+Characteristics+and+Transcoding+Time+Dataset
 public class SparkLinearRegression {
 	public static void main(String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -48,8 +47,6 @@ public class SparkLinearRegression {
 
 		// Building the model
 		int numIterations = 100;
-		//75	0.19074499877604897 intercept, weights [0.49250253763280133]	Execution time: 10121
-		//50	0.21459948278977786 intercept, weights [0.4755016122466446]
 		LinearRegressionWithSGD alg = new LinearRegressionWithSGD();
 		alg.setIntercept(true);
 		alg.optimizer().setNumIterations(numIterations);
@@ -63,8 +60,6 @@ public class SparkLinearRegression {
 
 					public Tuple2<Double, Double> call(LabeledPoint point) {
 						double prediction = model.predict(point.features());
-//						System.out.println("prediction: " + prediction * 500  + " actual " + point.label() * 500  + " features "
-//								+ point.features() + " point " + point);
 						return new Tuple2<>(prediction, point.label());
 					}
 				});
@@ -73,7 +68,6 @@ public class SparkLinearRegression {
 		double MSE = new JavaDoubleRDD(valuesAndPreds.map(new Function<Tuple2<Double, Double>, Object>() {
 			private static final long serialVersionUID = -1068039678092009862L;
 			public Object call(Tuple2<Double, Double> pair) {
-//				System.out.println(pair._1()*500+" "+ pair._2()*500 + " " +Math.pow(pair._1()*500 - pair._2()*500, 2.0));
 				return Math.pow(pair._1()*500 - pair._2()*500, 2.0);
 			}
 		}).rdd()).mean();
@@ -95,9 +89,5 @@ public class SparkLinearRegression {
 		System.out.println("Model creation time: " + (modelTime - startTime));
 		System.out.println("Execution time: " + (endTime - startTime));
 		jsc.close();
-		/*
-		 * 0.1905775934525417 intercept, weights [0.4928774614076809]
-		 * training Mean Squared Error = 5923.963237735686
-		 */
 	}
 }

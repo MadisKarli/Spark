@@ -65,18 +65,6 @@ public class SQLLinearRegressionSQLContext {
 			System.out.println("Model creation time time: " + (modelTime - startTime) );
 			System.out.println("Execution time: " + (endTime - startTime) );
 			jsc.close();
-			/* on initial data
-			 * +------------------+-----------------+
-			 * |             slope|        intercept|
-			 * +------------------+-----------------+
-			 * |0.5159989173914568|78.83729330624783|
-			 * +------------------+-----------------+
-			 * +-----------------+
-			 * | MeanSquaredError|
-			 * +-----------------+
-			 * |6484.900479676353|
-			 * +-----------------+
-			 */
 	}
 }
 

@@ -54,16 +54,3 @@ public class SparkCorrelation {
 		System.out.println("Correlation is: " + correlation);
 	}
 }
-/*
- * orig
- * 0.9202032394442802
- * Execution time: 6721 using XY
- * 1 mil 
- * Execution time: 15656 using two maps 
- * Execution time: 12164using XY and stuff 
- * 5mil 
- * Execution time: 61453 two maps 
- * Execution time: 46945 XY
- * 10mil
- * Execution time: 157291 XY
- */
